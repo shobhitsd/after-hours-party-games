@@ -87,13 +87,13 @@ export async function handleRequest(req,res){
 }
 
 export const server=http.createServer(handleRequest);
-const ticker=setInterval(()=>{for(const room of rooms.values())if(tick(room))broadcast(room);},500);
-ticker.unref();
-const cleanup=setInterval(()=>{for(const [c,r]of rooms)if(Date.now()-r.updated>6*3600000){for(const s of streams.get(c)||[])s.res.end();streams.delete(c);rooms.delete(c);}for(const [ip,r]of limits)if(Date.now()-r.at>120000)limits.delete(ip);},60000);
-cleanup.unref();
+let ticker, cleanup;
 
 const isDirectRun = Boolean(process.argv[1] && (path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url)) || process.argv[1].endsWith('server.js')));
 if(isDirectRun && !process.env.VERCEL){
+ ticker=setInterval(()=>{for(const room of rooms.values())if(tick(room))broadcast(room);},500);
+ cleanup=setInterval(()=>{for(const [c,r]of rooms)if(Date.now()-r.updated>6*3600000){for(const s of streams.get(c)||[])s.res.end();streams.delete(c);rooms.delete(c);}for(const [ip,r]of limits)if(Date.now()-r.at>120000)limits.delete(ip);},60000);
+
  server.listen(port,'0.0.0.0',()=>{
   console.log(`\n  AFTER HOURS · Six games. One good night.\n\n  Local: http://localhost:${port}`);
   for(const n of Object.values(networkInterfaces()).flat())if(n.family==='IPv4'&&!n.internal)console.log(`  Same Wi-Fi: http://${n.address}:${port}`);
