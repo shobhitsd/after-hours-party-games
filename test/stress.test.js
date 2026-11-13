@@ -35,7 +35,7 @@ test('invalid games, repeated actions, names, and late submissions are rejected 
  const normal=setup('seat');act(normal,normal.host,'skipTalk');normal.deadline=Date.now()-1;assert.throws(()=>act(normal,normal.host,'submit',0),/Time is up/);assert.equal(Object.keys(normal.actions).length,0);tick(normal);assert.equal(normal.stage,'reveal');
 });
 
-test('1200 complete randomized games: all roles, player counts, timeouts, redraws, rematches, privacy, and scoring',t=>{
+test('1400 complete randomized games: all roles, player counts, timeouts, redraws, rematches, privacy, and scoring',t=>{
  let rounds=0,actions=0;
  for(const game of Object.keys(games))for(let run=0;run<200;run++){
   const practice=run%2===0;const counts=game==='twins'?[6,8]:game==='borrowed'?[4,6,8]:game==='decoy'?[5,6,7,8]:[4,5,6,7,8];
@@ -44,7 +44,7 @@ test('1200 complete randomized games: all roles, player counts, timeouts, redraw
    checkHand(r);
    for(const p of r.players){const visible=JSON.stringify(view(r,p.id));assert.ok(r.players.every(other=>!visible.includes(other.token)));}
    if(r.stage==='reveal'){
-    rounds++;for(const p of r.players){totals[p.id]+=r.result.points[p.id];assert.equal(p.score,totals[p.id]);assert.ok(Number.isInteger(p.score)&&p.score>=0);}
+    rounds++;for(const p of r.players){totals[p.id]+=r.result.points[p.id];assert.equal(p.score,totals[p.id]);assert.ok(Number.isInteger(p.score*(game==='lone'?2:1))&&p.score>=0);}
     const scores=r.players.map(p=>p.score);tick(r,Date.now()+999999);assert.deepEqual(r.players.map(p=>p.score),scores);act(r,r.host,'next');continue;
    }
    if(r.practiceReady){const phase=r.phaseId;tick(r,Date.now()+999999);assert.equal(r.phaseId,phase);act(r,r.host,'continuePractice');continue;}
@@ -54,8 +54,9 @@ test('1200 complete randomized games: all roles, player counts, timeouts, redraw
     if(r.game==='borrowed'&&r.stage==='clue'&&run%3===0&&!r.data.sets[r.data.givers.indexOf(id)].redrawn)act(r,id,'redraw');
     const answer=chooseBotAction(view(r,id));act(r,id,'submit',answer);actions++;
    }
+   if(r.game==='lone'&&!r.practice&&r.stage==='pick')tick(r,r.deadline+1);
   }
   assert.equal(r.status,'finished',`${game}, run ${run}, stage ${r.stage}`);const phase=r.phaseId;startGame(r,r.host,game);assert.ok(r.phaseId>phase);assert.ok(r.players.every(p=>p.score===0));
  }
- t.diagnostic(`Completed 1200 games, ${rounds} rounds, ${actions} accepted player actions with no stalled phase or scoring/privacy invariant failure.`);
+ t.diagnostic(`Completed ${Object.keys(games).length*200} games, ${rounds} rounds, ${actions} accepted player actions with no stalled phase or scoring/privacy invariant failure.`);
 });

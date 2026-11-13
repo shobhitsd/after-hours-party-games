@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20-green.svg?logo=node.js)](https://nodejs.org)
 
-Six original real-time party games for 4–8 friends, featuring a responsive game lounge, animated dimensional illustrations, private screens, room links, timed rounds, scoring, and practice bots.
+Seven real-time party games for 4–8 friends, featuring a responsive game lounge, animated dimensional illustrations, private screens, room links, timed rounds, scoring, and practice bots.
 
 > [!NOTE]
 > **100% Original Intellectual Property**: No games, card decks, artwork, or mechanics copy existing titles. For a detailed legal audit, patent/copyright analysis, and trademark clearance, read [LEGAL_AND_IP.md](LEGAL_AND_IP.md).
@@ -16,6 +16,7 @@ Six original real-time party games for 4–8 friends, featuring a responsive gam
 
 | Game | Players | Category | How It Works |
 | :--- | :--- | :--- | :--- |
+| **Trust Issues** | 4?8 (best 5?8) | Trust & bluff | Secret rankings, unique picks, one-use Spy Cards, hidden reversals, streaks and a growing Jackpot. One round per player with a chaotic final. |
 | **Signal Bridge** *(formerly Crossed Signals)* | 4–8 | Word association | One sender gives a single clue for different secret targets on everyone's 6-, 9-, or 12-card boards. 24 association groups; five rotating rounds. |
 | **Decoy Department** | 5–8 | Creative sabotage | A target and seven related alternatives, then two secret saboteurs add decoys. Twelve authored sets; every player gets one turn as guide. |
 | **Crowd Control** | 4–8 | Social prediction | Calibrate a dilemma threshold with a blank to hit a secret target number of YES votes. Includes 40 prompt templates. |
@@ -88,3 +89,7 @@ npm run test:load
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
+
+## Trust Issues
+
+Choose **Trust Issues** in the lounge to host a game or try practice bots. The host can set all four timers and the hidden Underdog chance. Sixteen question sets, touch-friendly private ranking controls, recorded bluffs, Spy Windows, animated reveals, full scoring and six end-game awards are included. See [LONE_PICK.md](LONE_PICK.md) for rules, implementation choices, test coverage and file locations. Multiplayer requires the existing persistent Node process; this addition has been verified locally, not deployed to a hosting provider.

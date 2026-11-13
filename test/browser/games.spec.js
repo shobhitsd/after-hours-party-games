@@ -9,9 +9,9 @@ async function submitText(page,value){await page.locator('#answer-input').fill(v
 
 test('lounge, filters, instructions, keyboard dialog, and mobile layout',async({page})=>{
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto('/');await expect(page.locator('.game-card')).toHaveCount(6);await page.screenshot({path:'test-results/lounge-desktop.png',fullPage:true});
+ await page.goto('/');await expect(page.locator('.game-card')).toHaveCount(7);await page.screenshot({path:'test-results/lounge-desktop.png',fullPage:true});
  await page.getByRole('button',{name:'Wordplay'}).click();await expect(page.locator('.game-card')).toHaveCount(3);
- await page.getByRole('button',{name:'Social & bluffing'}).click();await expect(page.locator('.game-card')).toHaveCount(3);
+ await page.getByRole('button',{name:'Social & bluffing'}).click();await expect(page.locator('.game-card')).toHaveCount(4);
  await page.getByRole('button',{name:'All games'}).click();await page.locator('[data-game="signals"]').first().click();await expect(page.getByRole('dialog')).toBeVisible();await expect(page.locator('.rule-list li')).toHaveCount(3);await page.keyboard.press('Escape');await expect(page.getByRole('dialog')).toHaveCount(0);
  await page.setViewportSize({width:390,height:844});await page.screenshot({path:'test-results/lounge-mobile.png',fullPage:true});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  await page.getByRole('button',{name:'Join a room'}).click();await page.locator('#player-name').fill('Tester');await page.locator('#room-code').fill('XXXXX');await page.getByRole('button',{name:'Join the room'}).click();await expect(page.locator('.form-error')).toContainText('No room');

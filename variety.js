@@ -1,3 +1,4 @@
+import {loneDefaults} from './lone-content.js';
 // Hand-authored packs keep all base answers and sabotage hands distinct.
 export const themedBoards = {
  Penguin:['Puffin','Albatross','Seagull','Pelican','Cormorant','Gannet','Petrel'],
@@ -84,4 +85,4 @@ export const choicePacks = {
   [['Become tiny','🐜'],['Change your appearance','🎭'],['See the future','🔮'],['Enjoy the surprise','🎁']]
  ]}
 };
-export const defaultOptions = {signalCards:9,seatPack:'mixed',seatLimits:'open'};
+export const defaultOptions = {signalCards:9,seatPack:'mixed',seatLimits:'open',...loneDefaults};

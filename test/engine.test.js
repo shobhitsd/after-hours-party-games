@@ -5,6 +5,7 @@ import { games, prompts, pairSets, pairHints } from '../data.js';
 
 function setup(game,n=6){const {room,host}=createRoom('ABCDE','Alice');for(let i=1;i<n;i++)joinRoom(room,'Player '+i);startGame(room,host.id,game);return room;}
 function answer(r,id){const d=r.data;
+ if(r.game==='lone')return r.stage==='rank'?d.board.map((_,i)=>i):r.players.findIndex(p=>p.id===id)%d.board.length;
  if(r.game==='signals')return r.stage==='clue'?d.suggested:d.boards[id].target;
  if(r.game==='decoy')return r.stage==='clue'?d.suggested:r.stage==='sabotage'?0:d.board.indexOf(d.target);
  if(r.game==='crowd')return r.stage==='tune'?'1000':expected(r).indexOf(id)<d.target;
@@ -20,6 +21,7 @@ function answer(r,id){const d=r.data;
 function completeRound(r){for(let guard=0;r.stage!=='reveal'&&guard<10;guard++){
  if(r.stage==='talk'){act(r,r.host,'skipTalk');continue;}
  const phase=r.stage;for(const id of expected(r)){assert.equal(r.stage,phase);act(r,id,'submit',answer(r,id));}
+ if(r.game==='lone'&&r.stage==='pick')tick(r,r.deadline+1);
  }assert.equal(r.stage,'reveal');}
 
 for(const game of Object.keys(games))test(`${game}: a full multiplayer game, score, rotation, rematch`,()=>{

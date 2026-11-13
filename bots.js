@@ -27,6 +27,11 @@ const partnerWords = word => pairSets.flat().filter(pair=>pair.includes(word)).f
 // Bots get exactly the same filtered view as a browser. They cannot read other
 // players' targets, votes, partner assignments, or unsubmitted choices.
 export function chooseBotAction(v) {
+  if(v.game==='lone'){
+    if(v.stage==='rank'){const order=v.board.map((_,i)=>i);for(let i=order.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[order[i],order[j]]=[order[j],order[i]];}return order;}
+    const choices=v.board.map((_,i)=>i).filter(i=>i!==v.spy?.peek);
+    return {pick:pick(choices),belief:pick(['believe','doubt','unsure'])};
+  }
   if(v.game==='signals'){
     if(v.stage==='clue'){
       const targets=Object.values(v.boards).map(b=>b.cards[b.target]);
@@ -59,4 +64,13 @@ export function chooseBotAction(v) {
   }
   if(v.game==='seat')return pick(v.destinations.flatMap((d,i)=>Array.from({length:d.safe?2:Math.min(4,d.capacity??d.capacityRange[0])},()=>i)));
   throw new Error('No bot action for this phase.');
+}
+
+export function chooseLoneSideAction(v){
+ if(v.stage!=='talk')return null;
+ if(v.me===v.leader&&!v.claim)return {action:'claim',value:{first:pick(v.board.map((_,i)=>i)),message:'That is my number one. Trust me.'}};
+ // One deterministic decision per bot/round, based only on public round/seat data.
+ const seat=v.players.findIndex(p=>p.id===v.me);
+ if(v.spyAvailable&&!v.spy&&(v.round===v.total||v.round===seat+1))return {action:'spyTarget',value:v.players[(seat+1)%v.players.length].id};
+ return null;
 }

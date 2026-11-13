@@ -80,9 +80,9 @@ export async function handleRequest(req,res){
      const entry={id:p.id,res};list.add(entry);res.write(`data: ${JSON.stringify(view(room,p.id))}\n\n`);
      const heartbeat=setInterval(()=>res.write(': heartbeat\n\n'),15000);req.on('close',()=>{clearInterval(heartbeat);list.delete(entry);});return;
    }
-   const files={'/':'public/index.html','/index.html':'public/index.html','/app.js':'public/app.js','/dom.js':'public/dom.js','/styles.css':'public/styles.css','/gameplay.css':'public/gameplay.css','/favicon.svg':'public/favicon.svg'};
+   const files={'/':'public/index.html','/index.html':'public/index.html','/app.js':'public/app.js','/dom.js':'public/dom.js','/lone-ui.js':'public/lone-ui.js','/styles.css':'public/styles.css','/gameplay.css':'public/gameplay.css','/favicon.svg':'public/favicon.svg'};
    const file=files[url.pathname];if(!file){res.writeHead(404);return res.end('Not found');}
-   const data=await readFile(new URL(file,import.meta.url));const ext=file.split('.').pop();res.writeHead(200,{'Content-Type':({html:'text/html; charset=utf-8',js:'text/javascript; charset=utf-8',css:'text/css; charset=utf-8',svg:'image/svg+xml'})[ext],'Cache-Control':'no-cache','X-Content-Type-Options':'nosniff','Referrer-Policy':'same-origin','Content-Security-Policy':"default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; script-src 'self'; font-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"});res.end(data);
+   const data=await readFile(new URL(file,import.meta.url));const ext=file.split('.').pop();res.writeHead(200,{'Content-Type':({html:'text/html; charset=utf-8',js:'text/javascript; charset=utf-8',css:'text/css; charset=utf-8',svg:'image/svg+xml'})[ext],'Cache-Control':'no-cache','X-Content-Type-Options':'nosniff','Referrer-Policy':'same-origin','Content-Security-Policy':"default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self'; script-src 'self'; font-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"});res.end(data);
  }catch(e){if(!res.headersSent)json(res,{error:e.message||'Something went wrong.'},400);else res.end();}
 }
 
@@ -95,7 +95,7 @@ if(isDirectRun && !process.env.VERCEL){
  cleanup=setInterval(()=>{for(const [c,r]of rooms)if(Date.now()-r.updated>6*3600000){for(const s of streams.get(c)||[])s.res.end();streams.delete(c);rooms.delete(c);}for(const [ip,r]of limits)if(Date.now()-r.at>120000)limits.delete(ip);},60000);
 
  server.listen(port,'0.0.0.0',()=>{
-  console.log(`\n  AFTER HOURS · Six games. One good night.\n\n  Local: http://localhost:${port}`);
+  console.log(`\n  AFTER HOURS · Seven games. One good night.\n\n  Local: http://localhost:${port}`);
   for(const n of Object.values(networkInterfaces()).flat())if(n.family==='IPv4'&&!n.internal)console.log(`  Same Wi-Fi: http://${n.address}:${port}`);
   console.log(`\n  Project: ${fileURLToPath(new URL('.',import.meta.url))}\n  Press Ctrl+C to stop.\n`);
  });

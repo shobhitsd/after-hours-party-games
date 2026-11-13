@@ -1,6 +1,7 @@
 import { randomUUID, randomInt } from 'node:crypto';
 import { games, associations, decoys, filler, prompts, pairSets, borrowedSets, destinationSets } from './data.js';
-import { chooseBotAction } from './bots.js';
+import { chooseBotAction, chooseLoneSideAction } from './bots.js';
+import {initLone,nextLone,loneExpected,loneAction,advanceLone,scoreLone,loneView} from './lone.js';
 import { choicePacks, defaultOptions } from './variety.js';
 
 export const shuffle = a => { const b=[...a]; for(let i=b.length-1;i>0;i--){const j=randomInt(i+1); [b[i],b[j]]=[b[j],b[i]];} return b; };
@@ -30,7 +31,10 @@ function validateOptions(options){
  const next={...defaultOptions,...options};
  insist([6,9,12].includes(next.signalCards),'Choose 6, 9, or 12 cards.');
  insist(next.seatPack==='mixed'||Object.hasOwn(choicePacks,next.seatPack),'Choose a valid topic pack.');
- insist(['open','mystery'].includes(next.seatLimits),'Choose visible or mystery limits.');return next;
+ insist(['open','mystery'].includes(next.seatLimits),'Choose visible or mystery limits.');
+ for(const key of ['loneRankSeconds','loneTalkSeconds','lonePickSeconds'])insist(Number.isInteger(next[key])&&next[key]>=10&&next[key]<=120,'Choose a timer between 10 and 120 seconds.');
+ insist(Number.isInteger(next.loneSpySeconds)&&next.loneSpySeconds>=5&&next.loneSpySeconds<=30,'Choose a Spy Window between 5 and 30 seconds.');
+ insist(Number.isInteger(next.loneUnderdogChance)&&next.loneUnderdogChance>=0&&next.loneUnderdogChance<=100,'Choose an Underdog chance from 0 to 100 percent.');return next;
 }
 export function configureRoom(room,id,game,options={}){
  insist(id===room.host,'Only the host can choose game options.');insist(room.status==='lobby','Options can only change in the lounge.');
@@ -46,11 +50,13 @@ export function startGame(room,id,game,options=room.options){
   room.game=game;room.status='playing';room.round=0;room.total=g.rounds||room.players.length;room.players.forEach(p=>p.score=0);room.history=[];room.seed=randomInt(10000);
   room.deck=shuffle(Array.from({length:game==='crowd'?prompts.length:game==='twins'?pairSets.length:associations.length},(_,i)=>i));
   if(game==='seat'){room.seatTopics=shuffle(Object.keys(choicePacks));room.seatRounds=shuffle([0,1,2,3,4,5]);}
+  if(game==='lone')initLone(room);
   nextRound(room);
 }
 function nextRound(r){
   r.round++; r.result=null; r.actions={}; const index=r.deck[(r.round-1)%r.deck.length]; const ids=r.players.map(p=>p.id); const leader=ids[(r.round-1)%ids.length];
   r.data={leader};
+  if(r.game==='lone'){nextLone(r,stage);return;}
   if(r.game==='signals'){
     const set=associations[index%associations.length]; r.data.suggested=set[0];r.data.boards={};
     const vocabulary=[...new Set(associations.flatMap(([,targets,others])=>[...targets,...others]))].filter(w=>!set[1].includes(w)&&w.toLowerCase()!==set[0].toLowerCase());
@@ -76,6 +82,7 @@ function nextRound(r){
 export function expected(r){
  const ids=r.players.map(p=>p.id),d=r.data;
  if(['reveal','finished','lobby'].includes(r.stage))return [];
+ if(r.game==='lone')return loneExpected(r);
  if(r.game==='seat')return r.stage==='talk'?[]:ids;
  if(r.game==='twins')return ids;
  if(r.game==='borrowed')return r.stage==='guess'?ids.filter(id=>!d.givers.includes(id)):d.givers;
@@ -87,8 +94,9 @@ export function act(r,id,action,value){
   insist(r.players.some(p=>p.id===id),'Player not found.');
   if(action==='lobby'){insist(id===r.host,'Only the host can return everyone to the lounge.');r.status='lobby';stage(r,'lobby',0);r.data=null;r.actions={};r.result=null;r.game=null;return;}
   if(action==='next'){insist(id===r.host,'Only the host can advance the round.');insist(r.stage==='reveal','Wait for the reveal.');if(r.round>=r.total){r.status='finished';stage(r,'finished',0);}else nextRound(r);return;}
-  if(action==='skipTalk'){insist(id===r.host && r.game==='seat'&&r.stage==='talk','Only the host can finish discussion.');stage(r,'pick',30);return;}
+  if(action==='skipTalk'&&r.game!=='lone'){insist(id===r.host && r.game==='seat'&&r.stage==='talk','Only the host can finish discussion.');stage(r,'pick',30);return;}
   if(action==='continuePractice'){insist(r.practice&&r.host===id&&r.practiceReady&&r.status==='playing','Wait for everyone to lock in before continuing the demo.');advance(r);return;}
+  if(r.game==='lone'){loneAction(r,id,action,value,{stage,touch,completePhase});return;}
   insist(r.status==='playing'&&expected(r).includes(id),'It is not your turn to act.');insist(!(id in r.actions),'Your answer is already locked in.');
   insist(!r.deadline||Date.now()<r.deadline,'Time is up. Wait for the next phase.');
   const d=r.data;
@@ -116,6 +124,7 @@ export function act(r,id,action,value){
   if(expected(r).every(p=>p in r.actions))completePhase(r);
 }
 function advance(r){
+ if(r.game==='lone'){advanceLone(r,{stage,reveal});return;}
  const d=r.data,a=r.actions;
  if(r.game==='signals'&&r.stage==='clue'){d.clue=a[d.leader]||'…';r.actions={};stage(r,'guess',45);}
  else if(r.game==='decoy'&&r.stage==='clue'){d.clue=a[d.leader]||'…';r.actions={};stage(r,'sabotage',30);}
@@ -129,6 +138,7 @@ function advance(r){
 }
 function reveal(r){
   const d=r.data,a=r.actions,points=Object.fromEntries(r.players.map(p=>[p.id,0]));let rows=[],headline='',detail='';
+  if(r.game==='lone'){r.result=scoreLone(r);r.players.forEach(p=>p.score+=r.result.points[p.id]);r.history.push(r.result);stage(r,'reveal',0);return;}
   if(r.game==='signals'){
     rows=Object.entries(d.boards).map(([id,b])=>({id,answer:b.cards[a[id]]||'No answer',target:b.cards[b.target],correct:a[id]===b.target}));const count=rows.filter(x=>x.correct).length;const total=count+(count===rows.length?2:0);r.players.forEach(p=>points[p.id]=total);headline=count===rows.length?'Perfect connection!':`${count} of ${rows.length} signals connected`;detail=`“${d.clue}” earned the group ${total} points${count===rows.length?' — including a 2-point bonus':''}.`;
   }else if(r.game==='decoy'){
@@ -152,6 +162,7 @@ export function tick(r,now=Date.now()){
   if(now-r.since>1800){
     for(const p of r.players.filter(p=>p.bot)){
       if(r.phaseId!==phase||r.practiceReady)break;
+      if(r.game==='lone'){const move=chooseLoneSideAction(view(r,p.id));if(move){act(r,p.id,move.action,move.value);changed=true;}if(r.phaseId!==phase||r.practiceReady)break;}
       if(expected(r).includes(p.id)&&!(p.id in r.actions)){act(r,p.id,'submit',chooseBotAction(view(r,p.id)));changed=true;}
     }
   }
@@ -163,6 +174,7 @@ export function view(r,id){
  const v={code:r.code,host:r.host,me:id,practice:r.practice,practiceReady:r.practiceReady,revision:r.revision,phaseId:r.phaseId,options:r.options,selectedGame:r.selectedGame,players:r.players.map(({token,...p})=>p),status:r.status,stage:r.stage,game:r.game,round:r.round,total:r.total,deadline:r.deadline,serverTime:Date.now(),result:r.result||null};
  if(r.status==='lobby')return v;
  const d=r.data;v.submitted=Object.keys(r.actions||{});v.expectedCount=expected(r).length;v.canAct=expected(r).includes(id)&&!(id in r.actions);v.ownAnswer=r.actions[id];v.leader=d.leader;
+ if(r.game==='lone')return Object.assign(v,loneView(r,id));
  if(r.game==='signals'){
    v.clue=d.clue;v.role=id===d.leader?'Signal sender':'Receiver';
    if(id===d.leader)v.boards=d.boards;else v.board=d.boards[id].cards;

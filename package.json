@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Six real-time party games for friends, built with plain JavaScript and Node.js.",
+  "description": "Seven real-time party games for friends, built with plain JavaScript and Node.js.",
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",

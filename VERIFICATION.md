@@ -1,4 +1,16 @@
-# Gameplay fixes and verification — 13 November 2026
+# Gameplay fixes and verification
+
+## Trust Issues addition — 14 November 2026
+
+- Added the seventh game with private ranking, recorded claims, timed picks, Spy Windows, all specified scoring twists, random Ranker constraints, final-round chaos, awards and rematches. Details and clarified edge cases: [LONE_PICK.md](LONE_PICK.md).
+- `npm test`: **53 tests passed**. The main randomized workload now completes **1,400 games, 7,500 rounds and 54,420 accepted actions** across all seven games. Dedicated Trust Issues checks additionally complete 200 timeout-driven games and 25 practice games.
+- Browser checks: **35 distinct tests passed**. The complete 34-test suite passed; after final presentation refinements, all five Trust Issues browser tests passed, including the newly added unique-pick tie-break/shared-winner check.
+- Trust Issues browser coverage includes a complete mobile practice game, Spy Card use and target disclosure, every phase through final awards/rematch, real multiplayer private peeks, the full Pick timer, rank controls and draft restoration. Twelve viewport sizes are exercised. Chrome, WebKit and Firefox passed their relevant interaction tests; physical devices were not certified.
+- Concurrency regression passed: **24 rooms, 192 players, 193 event streams, 4,109 requests and 1,152 rejected duplicate submissions**. This shared-server check uses Last Seat; it is not a claim that 192-player Trust Issues sessions were load-tested. Latest local workload: 2.00 seconds; measured request median / p95 / maximum: 30.84 / 137.94 / 164.40 ms.
+- Screenshots: `test-results/lone-ipad-rank.png`, `lone-phone-spy.png`, `lone-phone-reveal.png`, and `lone-awards.png`. Load report: `test-results/load-report.json`.
+- The local server was restarted and verified at `http://localhost:3000`, including the new game catalog and UI module. No hosted service was deployed. Rooms still live in server memory.
+
+## Previous update — 13 November 2026
 
 ## What changed
 
