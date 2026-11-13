@@ -53,8 +53,13 @@ const fallbackFaviconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0
 export async function handleRequest(req,res){
  try{
    for(const room of rooms.values()){if(tick(room))broadcast(room);}
-   if(req.headers&&req.headers['x-matched-path']){req.url=req.headers['x-matched-path'];}
-   const url=new URL(req.url,'http://localhost');
+   let url=new URL(req.url,'http://localhost');
+   if(url.searchParams.has('__route')){
+     const route=url.searchParams.get('__route');
+     url=new URL(route.startsWith('/')?route:'/api/'+route,'http://localhost');
+   } else if(req.headers&&req.headers['x-matched-path']){
+     url=new URL(req.headers['x-matched-path'],'http://localhost');
+   }
    if(req.method==='GET'&&(url.pathname==='/api/health'||url.pathname==='/api/ping'))return json(res,{application:'after-hours-party-games',version:'1.0.0'});
    if(req.method==='GET'&&url.pathname==='/api/games')return json(res,games);
    if(req.method==='GET'&&url.pathname==='/api/options')return json(res,{defaults:defaultOptions,packs:Object.entries(choicePacks).map(([id,pack])=>({id,name:pack.name}))});
