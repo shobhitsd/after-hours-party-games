@@ -1,0 +1,74 @@
+/* Phase transitions animate once. Choices and live updates keep their DOM nodes. */
+.stage-content{scroll-margin-top:24px}
+.demo-guide{margin-bottom:25px;border:1px solid #e2dfcf;border-radius:13px;background:#f7f5ec;padding:16px}
+.demo-guide>div{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.demo-guide strong{font-size:9px;letter-spacing:1.3px;color:#7b7258}
+.demo-guide>div>span{font-size:10px;color:#7d806f}
+.demo-guide ol{display:flex;list-style:none;margin:15px 0 0;padding:0;gap:12px}
+.demo-guide li{display:flex;align-items:center;gap:6px;flex:1;font-size:10px;color:#8d907e;line-height:1.4}
+.demo-guide li b{display:grid;place-items:center;flex-shrink:0;width:22px;height:22px;border:1px solid #dddfd0;border-radius:50%;font-size:9px;font-weight:normal}
+.demo-guide .current{color:#493d5a;font-weight:700}
+.demo-guide .current b{background:var(--surface);border-color:var(--deep)}
+.demo-guide .done b{background:#e3ebd5;color:#687f4b;border-color:#d1dfbc}
+.demo-continue{display:flex;align-items:center;justify-content:space-between;gap:18px;border-top:1px solid #e5e4d8;margin-top:26px;padding-top:21px;min-height:77px}
+.demo-continue>div{display:flex;flex-direction:column;gap:4px}
+.demo-continue strong{font-size:12px;color:#5c654c}
+.demo-continue>div>span{font-size:11px;color:#838875}
+.demo-continue .btn{font-size:12px;padding:12px 18px;flex-shrink:0}
+.ready-check{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#dce7ca;color:#647e46;flex-shrink:0}
+.hand-label{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:23px;padding:12px 15px;border-radius:10px;border:1px solid #deccea;background:#eee5f6;color:#75538e}
+.hand-label>span{font-size:9px;letter-spacing:1.2px;font-weight:600}
+.hand-label strong{font-size:12px}
+.hand-label.own{background:#f8e9d8;border-color:#e9d1b6;color:#926844}
+.hand-change-note{font-size:11px;line-height:1.65;color:#7a7b68;margin-top:12px}
+.hand-review{margin-top:23px;border:1px solid #e3dce9;border-radius:12px;padding:14px 16px;background:#faf7fc}
+.hand-review summary{font-size:12px;font-weight:600;color:#7b628e;cursor:pointer;line-height:1.6}
+.hand-review>p{font-size:11px;color:#8b7b96;line-height:1.6;margin-top:12px}
+.audit-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:13px}
+.audit-card{padding:12px 7px;border:1px solid #e4dbe9;border-radius:8px;background:#fff;font-size:11px;text-align:center;color:#7d6a8d;overflow-wrap:anywhere}
+.audit-card.removed{color:#a7868e;background:#f2e9ed;border-style:dashed;text-decoration:line-through}
+.audit-card small{display:block;font-size:7px;letter-spacing:.5px;margin-top:5px;text-decoration:none}
+.word-card .word-label{display:block}
+.word-card.removed{color:#9a8e84}
+.word-card.removed small{color:#9a8e84}
+.game-options{margin:20px 0;padding:17px;background:#f0f1e7;border:1px solid #dde1d1;border-radius:12px}
+.game-options h3{font-size:16px;letter-spacing:-.4px;margin-bottom:12px}
+.game-options label{font-size:11px;margin-top:12px}
+.game-options select{font:inherit;font-size:13px;width:100%;min-height:46px;padding:10px 12px;background:#fffef8;border:1px solid #cbd1bf;border-radius:8px;color:#3b4632}
+.game-options p{font-size:11px;line-height:1.65;color:#747f65;margin-top:13px}
+.team-workspace{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:16px;margin-top:23px}
+.team-hand{min-width:0;padding:15px;border:1px solid #e4decd;background:#faf9f3;border-radius:14px}
+.team-hand .hand-label{margin-top:0;padding:10px;flex-wrap:wrap;gap:5px}
+.team-hand.active-hand{border:2px solid #cbb96f;padding:14px;background:#fffdf5}
+.hand-purpose{font-size:11px;line-height:1.65;color:#7b806b;margin-top:12px;min-height:54px}
+.active-hand-label{display:block;font-size:8px;letter-spacing:1px;font-weight:700;color:#9c823a;margin-top:12px}
+.team-hand .word-grid{margin:15px 0 0;gap:8px}
+.team-hand .word-card{font-size:12px;min-height:66px;padding:15px 6px}
+.team-hand .audit-grid{margin-top:15px}
+.team-hand .audit-card{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:53px;padding:10px 5px}
+.round-topic{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#7e8c64;margin-bottom:14px}
+.mystery-note{font-size:12px;line-height:1.65;color:#81774c;border-left:3px solid #decd8b;padding:10px 13px;margin-top:15px;background:#fbf7e8;border-radius:0 8px 8px 0}
+.destination h3{overflow-wrap:anywhere;line-height:1.25;min-height:2.5em}
+button,input,select{touch-action:manipulation}
+.partner-card,.final-score strong{min-width:0}
+.partner-card strong,.final-score strong{overflow-wrap:anywhere}
+.vote-choice[aria-pressed=true],.partner-card[aria-pressed=true],.destination[aria-pressed=true]{outline:2px solid var(--deep);outline-offset:2px}
+@media(max-width:600px){
+ .play-heading h1{max-width:none;font-size:clamp(23px,7vw,29px)}
+ .demo-guide{padding:14px 12px;margin-bottom:22px}
+ .demo-guide>div{align-items:start}
+ .demo-guide strong{font-size:8px;white-space:nowrap}
+ .demo-guide>div>span{font-size:9px;text-align:right}
+ .demo-guide ol{gap:8px}
+ .demo-guide li{align-items:start;flex-direction:column;gap:6px;font-size:9px}
+ .demo-continue{align-items:stretch;flex-direction:column;gap:13px}
+ .demo-continue>div{flex-direction:row;align-items:center;justify-content:space-between;gap:12px}
+ .demo-continue strong{font-size:11px}
+ .demo-continue>div>span{font-size:10px;text-align:right}
+ .hand-label{padding:11px 12px}
+ .hand-label>span{font-size:8px;letter-spacing:.8px}
+ .hand-label strong{font-size:11px}
+ .hand-review{padding:13px}
+ .hand-review summary{font-size:11px}
+}
+@media(max-width:380px){.header{padding:15px 14px}.brand{font-size:20px}.header nav{gap:9px}.header .btn.small{padding:8px 10px}}

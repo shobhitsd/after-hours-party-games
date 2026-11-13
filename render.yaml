@@ -1,0 +1,19 @@
+# Paid, single-instance beta. Rooms currently reset on a server restart.
+services:
+  - type: web
+    name: after-hours
+    runtime: node
+    region: singapore
+    plan: 0.5c-512mb
+    numInstances: 1
+    buildCommand: npm ci --omit=dev
+    startCommand: node server.js
+    healthCheckPath: /api/health
+    autoDeployTrigger: off
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: NODE_ENV
+        value: production
+# After creation, set PUBLIC_ORIGIN in the dashboard to the service's HTTPS URL.
+# Update it if you attach a custom domain. Do not include a trailing path.

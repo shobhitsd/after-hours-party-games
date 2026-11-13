@@ -1,0 +1,11 @@
+node_modules/
+.git/
+.local/
+test/
+test-results/
+*.cmd
+*.ps1
+Dockerfile
+render.yaml
+.env
+.env.*

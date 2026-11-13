@@ -1,0 +1,21 @@
+{
+  "name": "after-hours-party-games",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Six real-time party games for friends, built with plain JavaScript and Node.js.",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "build": "node -e \"console.log('After Hours: Vercel build ready')\"",
+    "test": "node --test test/*.test.js",
+    "test:ui": "playwright test",
+    "test:load": "node test/load.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.0"
+  }
+}
