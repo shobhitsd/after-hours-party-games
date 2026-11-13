@@ -27,11 +27,35 @@ async function body(req){
 }
 function json(res,data,status=200){res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(data));}
 
+const fallbackIndexHtml = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f5ee">
+  <meta name="description" content="Seven little games. Big group chat energy. Gather your friends for an After Hours game night.">
+  <title>After Hours — Good friends. Questionable decisions.</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/gameplay.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="modal-root"></div>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <div id="confetti" aria-hidden="true"></div>
+</body>
+</html>`;
+
+const fallbackFaviconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="19" fill="#c9b6f5"/><path d="M32 12v40M12 32h40M18 18l28 28M18 46l28-28" stroke="#252623" stroke-width="7"/></svg>`;
+
 export async function handleRequest(req,res){
  try{
    for(const room of rooms.values()){if(tick(room))broadcast(room);}
+   if(req.headers&&req.headers['x-matched-path']){req.url=req.headers['x-matched-path'];}
    const url=new URL(req.url,'http://localhost');
-   if(req.method==='GET'&&url.pathname==='/api/health')return json(res,{application:'after-hours-party-games',version:'1.0.0'});
+   if(req.method==='GET'&&(url.pathname==='/api/health'||url.pathname==='/api/ping'))return json(res,{application:'after-hours-party-games',version:'1.0.0'});
    if(req.method==='GET'&&url.pathname==='/api/games')return json(res,games);
    if(req.method==='GET'&&url.pathname==='/api/options')return json(res,{defaults:defaultOptions,packs:Object.entries(choicePacks).map(([id,pack])=>({id,name:pack.name}))});
    if(req.method==='GET'&&url.pathname==='/api/network'){
@@ -100,7 +124,11 @@ export async function handleRequest(req,res){
      try {
        data=await readFile(path.join(process.cwd(),file));
      } catch {
-       res.writeHead(404,{'Content-Type':'text/plain'});return res.end('Not found');
+       if(url.pathname==='/'||url.pathname==='/index.html') data=fallbackIndexHtml;
+       else if(url.pathname==='/favicon.svg') data=fallbackFaviconSvg;
+       else {
+         res.writeHead(404,{'Content-Type':'text/plain'});return res.end('Not found');
+       }
      }
    }
    const ext=file.split('.').pop();
@@ -114,6 +142,8 @@ export async function handleRequest(req,res){
    res.end(data);
  }catch(e){if(!res.headersSent)json(res,{error:e.message||'Something went wrong.'},400);else res.end();}
 }
+
+export default handleRequest;
 
 export let server=null;
 let ticker, cleanup;

@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "build": "node -e \"const fs=require('fs'); fs.copyFileSync('public/index.html','index.html'); console.log('After Hours: Vercel build ready');\"",
+    "build": "node -e \"console.log('After Hours: Vercel ready')\"",
     "test": "node --test test/*.test.js",
     "test:ui": "playwright test",
     "test:load": "node test/load.mjs"
