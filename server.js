@@ -41,7 +41,7 @@ export async function handleRequest(req,res){
      // Same-origin JSON requests only; browsers cannot submit cross-origin forms to the API.
      if(!req.headers['content-type']?.includes('application/json'))return json(res,{error:'JSON required.'},415);
      if(req.headers.origin&&![publicOrigin,`http://${req.headers.host}`,`https://${req.headers.host}`].includes(req.headers.origin))return json(res,{error:'Origin not allowed.'},403);
-     const ip=req.socket.remoteAddress;const rateKey=req.headers.authorization?`${ip}:${req.headers.authorization}`:ip;const rate=limits.get(rateKey)||{n:0,at:Date.now()};if(Date.now()-rate.at>60000){rate.n=0;rate.at=Date.now();}rate.n++;limits.set(rateKey,rate);if(rate.n>240)return json(res,{error:'Please slow down and try again shortly.'},429);
+     const ip=(req.headers['x-forwarded-for']||'').split(',')[0].trim()||req.socket?.remoteAddress||'127.0.0.1';const rateKey=req.headers.authorization?`${ip}:${req.headers.authorization}`:ip;const rate=limits.get(rateKey)||{n:0,at:Date.now()};if(Date.now()-rate.at>60000){rate.n=0;rate.at=Date.now();}rate.n++;limits.set(rateKey,rate);if(rate.n>240)return json(res,{error:'Please slow down and try again shortly.'},429);
      const b=await body(req);
      if(!b||typeof b!=='object'||Array.isArray(b))throw new Error('Send a JSON object.');
      if(url.pathname==='/api/create'){
@@ -80,17 +80,54 @@ export async function handleRequest(req,res){
      const entry={id:p.id,res};list.add(entry);res.write(`data: ${JSON.stringify(view(room,p.id))}\n\n`);
      const heartbeat=setInterval(()=>res.write(': heartbeat\n\n'),15000);req.on('close',()=>{clearInterval(heartbeat);list.delete(entry);});return;
    }
-   const files={'/':'public/index.html','/index.html':'public/index.html','/app.js':'public/app.js','/dom.js':'public/dom.js','/lone-ui.js':'public/lone-ui.js','/styles.css':'public/styles.css','/gameplay.css':'public/gameplay.css','/favicon.svg':'public/favicon.svg'};
-   const file=files[url.pathname];if(!file){res.writeHead(404);return res.end('Not found');}
-   const data=await readFile(new URL(file,import.meta.url));const ext=file.split('.').pop();res.writeHead(200,{'Content-Type':({html:'text/html; charset=utf-8',js:'text/javascript; charset=utf-8',css:'text/css; charset=utf-8',svg:'image/svg+xml'})[ext],'Cache-Control':'no-cache','X-Content-Type-Options':'nosniff','Referrer-Policy':'same-origin','Content-Security-Policy':"default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self'; script-src 'self'; font-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"});res.end(data);
+   const files={
+     '/':'public/index.html',
+     '/index.html':'public/index.html',
+     '/app.js':'public/app.js',
+     '/dom.js':'public/dom.js',
+     '/lone-ui.js':'public/lone-ui.js',
+     '/styles.css':'public/styles.css',
+     '/gameplay.css':'public/gameplay.css',
+     '/favicon.svg':'public/favicon.svg',
+     '/favicon.ico':'public/favicon.ico'
+   };
+   const file=files[url.pathname];
+   if(!file){res.writeHead(404,{'Content-Type':'text/plain'});return res.end('Not found');}
+   let data;
+   try {
+     data=await readFile(new URL(file,import.meta.url));
+   } catch {
+     try {
+       data=await readFile(path.join(process.cwd(),file));
+     } catch {
+       res.writeHead(404,{'Content-Type':'text/plain'});return res.end('Not found');
+     }
+   }
+   const ext=file.split('.').pop();
+   res.writeHead(200,{
+     'Content-Type':({html:'text/html; charset=utf-8',js:'text/javascript; charset=utf-8',css:'text/css; charset=utf-8',svg:'image/svg+xml',ico:'image/x-icon'})[ext]||'application/octet-stream',
+     'Cache-Control':'no-cache',
+     'X-Content-Type-Options':'nosniff',
+     'Referrer-Policy':'same-origin',
+     'Content-Security-Policy':"default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self'; script-src 'self'; font-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
+   });
+   res.end(data);
  }catch(e){if(!res.headersSent)json(res,{error:e.message||'Something went wrong.'},400);else res.end();}
 }
 
-export const server=http.createServer(handleRequest);
+export let server=null;
 let ticker, cleanup;
 
-const isDirectRun = Boolean(process.argv[1] && (path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url)) || process.argv[1].endsWith('server.js')));
-if(isDirectRun && !process.env.VERCEL){
+const isDirectRun = Boolean(
+  process.argv[1] &&
+  !process.env.VERCEL &&
+  !process.env.VERCEL_ENV &&
+  !process.env.AWS_LAMBDA_FUNCTION_NAME &&
+  (path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url)))
+);
+
+if(isDirectRun){
+ server=http.createServer(handleRequest);
  ticker=setInterval(()=>{for(const room of rooms.values())if(tick(room))broadcast(room);},500);
  cleanup=setInterval(()=>{for(const [c,r]of rooms)if(Date.now()-r.updated>6*3600000){for(const s of streams.get(c)||[])s.res.end();streams.delete(c);rooms.delete(c);}for(const [ip,r]of limits)if(Date.now()-r.at>120000)limits.delete(ip);},60000);
 
@@ -100,14 +137,20 @@ if(isDirectRun && !process.env.VERCEL){
   console.log(`\n  Project: ${fileURLToPath(new URL('.',import.meta.url))}\n  Press Ctrl+C to stop.\n`);
  });
  server.on('error',e=>{console.error(e.code==='EADDRINUSE'?`Port ${port} is busy. Close the other server or set PORT to a different number.`:e.message);process.exit(1);});
+
+ let stopping=false;
+ const shutdown=()=>{
+  if(stopping)return;stopping=true;clearInterval(ticker);clearInterval(cleanup);
+  for(const list of streams.values())for(const stream of list)stream.res.end();
+  if(server)server.close(()=>process.exit(0));else process.exit(0);
+  setTimeout(()=>process.exit(0),5000).unref();
+ };
+ process.on('SIGINT',shutdown);
+ process.on('SIGTERM',shutdown);
 }
 
-let stopping=false;
 export function shutdown(){
- if(stopping)return;stopping=true;clearInterval(ticker);clearInterval(cleanup);
+ clearInterval(ticker);clearInterval(cleanup);
  for(const list of streams.values())for(const stream of list)stream.res.end();
- server.close(()=>process.exit(0));
- setTimeout(()=>process.exit(0),5000).unref();
+ if(server)server.close();
 }
-process.on('SIGINT',shutdown);
-process.on('SIGTERM',shutdown);
