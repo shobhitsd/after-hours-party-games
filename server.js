@@ -2,11 +2,12 @@ import http from 'node:http';
 import path from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { networkInterfaces } from 'node:os';
-import { randomInt } from 'node:crypto';
+import { randomInt, createHmac } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { createRoom, joinRoom, startGame, configureRoom, act, view, tick } from './engine.js';
 import { games } from './data.js';
 import { defaultOptions, choicePacks } from './variety.js';
+import { isSupabaseConfigured, checkHostSubscription, recordRoomSession, recordTelemetry } from './lib/supabase.js';
 
 export const rooms=new Map(), streams=new Map(), limits=new Map();
 const port=Number(process.env.PORT||3000);
@@ -85,12 +86,44 @@ export async function handleRequest(req,res){
      if(url.pathname==='/api/join'){
        const room=rooms.get(String(b.code).trim().toUpperCase());if(!room)throw new Error('No room with that code. Check it and try again.');const p=joinRoom(room,b.name);broadcast(room);return json(res,{code:room.code,token:p.token,state:view(room,p.id)});
      }
+     if(url.pathname==='/api/subscribe/create-order'){
+       const keyId=process.env.RAZORPAY_KEY_ID||'rzp_test_placeholder';
+       const planId=process.env.RAZORPAY_PLAN_ID||'plan_afterhours_vip_99';
+       const hostId=b.hostId||'guest_host';
+       return json(res,{
+         provider:'razorpay',
+         keyId,
+         planId,
+         amount:9900,
+         currency:'INR',
+         name:'After Hours VIP Host Pass',
+         description:'Unlimited 8-player rooms, 100+ deep scenarios & custom packs for 1 month',
+         hostId
+       });
+     }
+     if(url.pathname==='/api/webhooks/razorpay'){
+       const secret=process.env.RAZORPAY_WEBHOOK_SECRET;
+       const sig=req.headers['x-razorpay-signature'];
+       if(secret&&sig){
+         const expected=createHmac('sha256',secret).update(JSON.stringify(b)).digest('hex');
+         if(expected!==sig)return json(res,{error:'Invalid webhook signature'},401);
+       }
+       return json(res,{received:true,event:b.event||'ping'});
+     }
+     if(url.pathname==='/api/user/subscription'){
+       const userId=b.userId||req.headers['x-user-id'];
+       const isVip=userId?await checkHostSubscription(userId):false;
+       return json(res,{isVip,tier:isVip?'host_pass':'free',priceMonthly:'₹99'});
+     }
      const {room,p}=authenticate(req);
      if(url.pathname==='/api/start')startGame(room,p.id,b.game,b.options||room.options);
      else if(url.pathname==='/api/configure')configureRoom(room,p.id,b.game,b.options||room.options);
      else if(url.pathname==='/api/action'){
        if(b.action!=='lobby'&&(b.round!==room.round||b.stage!==room.stage||b.game!==room.game||b.phaseId!==room.phaseId))throw new Error('The game has moved on. Please use the current screen.');
        act(room,p.id,b.action,b.value);
+       if(room.stage==='finished'){
+         recordRoomSession({code:room.code,game:room.game,hostId:room.host,players:room.players,round:room.round}).catch(()=>{});
+       }
      }
      else if(url.pathname==='/api/leave'){
        if(room.status!=='lobby')throw new Error('Return to the lounge before leaving the room.');
