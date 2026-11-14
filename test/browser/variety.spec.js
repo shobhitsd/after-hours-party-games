@@ -4,14 +4,13 @@ async function start(page,id,options={}){await page.goto('/');await page.locator
 async function next(page){await expect(page.getByRole('button',{name:'Continue demo'})).toBeEnabled();await page.getByRole('button',{name:'Continue demo'}).click();}
 async function checkWidths(page,label){for(const [width,height]of screens){await page.setViewportSize({width,height});await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth-innerWidth),{message:`${label} at ${width}x${height}`}).toBeLessThanOrEqual(1);}}
 
-for(const game of ['signals','decoy','crowd','seat','twins','borrowed'])test(`${game}: phone, landscape, iPad and desktop layouts`,async({page})=>{
- test.setTimeout(60000);await page.emulateMedia({reducedMotion:'reduce'});await start(page,game,game==='signals'?{signalCards:12}:game==='seat'?{seatPack:'shows',seatLimits:'mystery'}:{});
+for(const game of ['signals','decoy','crowd','twins','borrowed'])test(`${game}: phone, landscape, iPad and desktop layouts`,async({page})=>{
+ test.setTimeout(60000);await page.emulateMedia({reducedMotion:'reduce'});await start(page,game,game==='signals'?{signalCards:12}:{});
  await checkWidths(page,game);
  if(game==='borrowed'){
   for(const i of [0,4,8])await page.locator(`[data-choice="${i}"]`).click();await page.locator('[data-action="lock"]').click();await expect(page.locator('.waiting-box')).toContainText('Both clue-givers have finished removing 3 cards each.');await expect(page.locator('.waiting-box')).not.toContainText('2 of 2 choices');await next(page);await expect(page.locator('.clue-tray')).toBeVisible();await expect(page.locator('.team-hand')).toHaveCount(2);await checkWidths(page,'both hands');
   await page.setViewportSize({width:820,height:1180});await page.screenshot({path:'test-results/borrowed-ipad.png',fullPage:true});await page.setViewportSize({width:390,height:844});await page.screenshot({path:'test-results/borrowed-phone.png',fullPage:true});
  }
- if(game==='seat'){await page.locator('[data-action="skipTalk"]').click();await page.locator('[data-choice="0"]').click();await page.locator('[data-action="lock"]').click();await next(page);await expect(page.locator('.reveal-rows')).toBeVisible();await expect(page.locator('.reveal-rows')).not.toContainText('undefined');}
 });
 
 test('Signal Bridge size selection, shared lobby settings, and live boards agree',async({page,request})=>{

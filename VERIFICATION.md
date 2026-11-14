@@ -1,8 +1,49 @@
 # Gameplay fixes and verification
 
+## Packed House replacement — 14 November 2026
+
+Packed House replaces Trust Issues and Last Seat in both the game catalog and running engine. The other five games remain. Rules, tables and operational choices: [PACKED_HOUSE.md](PACKED_HOUSE.md). Historical results below describe earlier versions, not the current game.
+
+### Current checks
+
+- **50 engine/test cases passed** with `npm test`. These include 1,200 complete randomized games across all six games (6,700 rounds, 60,248 accepted player actions), plus a separate 1,000 Packed House games (7,496 rounds). Packed House checks include all player counts, skipped and replaced submissions, disconnected players, floor division, optional Soft Landing, anonymous ballots, shared wins, paused timers, host transfer, and returning from a paused game to another game.
+- **10,000 aggregation fuzz cases** check Borda conservation and ordering independence. Portable SHA-256 matches Node's implementation on known vectors and 300 generated proofs; edits to each committed field fail verification. Pre-reveal player and spectator views are checked for capacity, nonce, ranking, pick and token leaks.
+- **6,438,312 exhaustive outcome combinations passed**, each checked under Classic and Soft Landing: every legal capacity vector crossed with every room-occupancy vector, including abstentions, for 5–10 players. That is 12,876,624 scoring-mode scenarios and 76,491,216 per-room checks. An independent integer-quotient calculation checks payouts. This exhausts outcome shapes, not every labelled-player permutation or strategy. Report: `test-results/packed-exhaustive.json`.
+- **31 distinct browser scenarios passed across the full regression run and final focused rerun.** The full run passed 30/31; its remaining test sampled a second tab before that tab had received its own updated state. The test now waits for both clients and deliberately holds an older HTTP response until a newer choice arrives. The final seven-test Packed House run passed in full. Existing games' full practice rounds, all roles, rematches, typing, selection flicker, borrowed-hand auditing and mobile regressions passed in the full run.
+- Packed House browser coverage includes five full practice rounds, changing saved ranks/picks, reload and duplicate tabs, anonymous/custom packs, text escaping, rejected settings, tampered-proof warnings, drag/drop, touch pointer cancellation, and twelve viewport sizes from 320 pixels wide through desktop and tablet landscapes. Chrome, Firefox and WebKit passed their interaction checks. These are browser tests, not physical-device certification.
+- A real-timer **ten-player** browser/API game verified six rooms, full Rank/Pick deadlines even after everyone submitted, hidden picks/capacities, late spectators, a scored reveal, quorum pause, host transfer and early finish with completed scores preserved.
+
+### HTTP/SSE workload
+
+`npm run test:load` passed on an isolated local server:
+
+| Measurement | Result |
+| --- | --- |
+| Rooms / seated players / spectators | 20 / 200 / 20 |
+| Concurrent event streams | 221, including a duplicate identity |
+| Completed rounds | 100 |
+| Requests | 7,945 |
+| Idempotent duplicate/delayed retries | 3,000, without undoing later saves |
+| Stream events inspected | 84,816 |
+| Maximum in-flight HTTP requests | 32 |
+| Latest elapsed workload | 15.35 seconds |
+| Request median / p95 / max | 50.57 / 123.09 / 272.79 ms |
+
+The workload uses real HTTP and SSE but controls phase deadlines through the in-process engine. It checks spectator restrictions, per-player event identity, revisions, hidden data, accepted replacements, duplicate retries, exact payouts, finished games and stale rematch actions. It is not a production internet-capacity benchmark. Report: `test-results/load-report.json`.
+
+### Review and run
+
+- Screenshots inspected: `test-results/packed-pick-phone.png`, `packed-reveal-ipad.png`, `packed-reveal-desktop.png`. The final screenshots disable animations while capturing their completed state; the app itself retains transitions and staggered reveals, with reduced-motion support.
+- The local server was restarted at **http://localhost:3000** and verified to list Packed House plus the five remaining games. New UI/proof/CSS assets return HTTP 200; server error log is empty. Use START GAMES.cmd again when needed; STOP GAMES.cmd tracks the restarted process.
+- `git diff --check` passed. The Docker copy list includes the new engine and existing `lib` dependencies; a container build was not run.
+- The supplied document's earlier 3.7-million-test and strategic-bot findings were not independently reproduced. Our tests establish the checks above, not that the game is fun or balanced against human strategies. Human playtests remain necessary, especially for zero-score frustration and Soft Landing.
+- Rooms remain in process memory and reset on restart. A persistent Node host is required for real multiplayer; the existing serverless adapter alone is insufficient. This change was not deployed to a public host.
+
+Reproduce with `npm test`, `npm run test:ui`, `npm run test:exhaustive`, and `npm run test:load`, in that order. Playwright clears its output directory at startup, so run the two JSON-producing stress checks afterward.
+
 ## Trust Issues addition — 14 November 2026
 
-- Added the seventh game with private ranking, recorded claims, timed picks, Spy Windows, all specified scoring twists, random Ranker constraints, final-round chaos, awards and rematches. Details and clarified edge cases: [LONE_PICK.md](LONE_PICK.md).
+- Added the seventh game with private ranking, recorded claims, timed picks, Spy Windows, all specified scoring twists, random Ranker constraints, final-round chaos, awards and rematches. Details and clarified edge cases: [LONE_PICK.md](.archive/retired-games/LONE_PICK.md).
 - `npm test`: **53 tests passed**. The main randomized workload now completes **1,400 games, 7,500 rounds and 54,420 accepted actions** across all seven games. Dedicated Trust Issues checks additionally complete 200 timeout-driven games and 25 practice games.
 - Browser checks: **35 distinct tests passed**. The complete 34-test suite passed; after final presentation refinements, all five Trust Issues browser tests passed, including the newly added unique-pick tie-break/shared-winner check.
 - Trust Issues browser coverage includes a complete mobile practice game, Spy Card use and target disclosure, every phase through final awards/rematch, real multiplayer private peeks, the full Pick timer, rank controls and draft restoration. Twelve viewport sizes are exercised. Chrome, WebKit and Firefox passed their relevant interaction tests; physical devices were not certified.

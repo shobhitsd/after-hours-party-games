@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const titles={signals:'Signal Bridge',decoy:'Decoy Department',crowd:'Crowd Control',seat:'Last Seat',twins:'Almost Twins',borrowed:'Borrowed Words'};
+const titles={signals:'Signal Bridge',decoy:'Decoy Department',crowd:'Crowd Control',twins:'Almost Twins',borrowed:'Borrowed Words'};
 async function practice(page,id){
  await page.goto('/');await page.locator(`.art-button[data-game="${id}"]`).click();await page.getByRole('button',{name:'Try with practice bots'}).click();await expect(page.locator('.play-heading h1')).toContainText(titles[id]);
 }
@@ -9,9 +9,9 @@ async function submitText(page,value){await page.locator('#answer-input').fill(v
 
 test('lounge, filters, instructions, keyboard dialog, and mobile layout',async({page})=>{
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto('/');await expect(page.locator('.game-card')).toHaveCount(7);await page.screenshot({path:'test-results/lounge-desktop.png',fullPage:true});
+ await page.goto('/');await expect(page.locator('.game-card')).toHaveCount(6);await page.screenshot({path:'test-results/lounge-desktop.png',fullPage:true});
  await page.getByRole('button',{name:'Wordplay'}).click();await expect(page.locator('.game-card')).toHaveCount(3);
- await page.getByRole('button',{name:'Social & bluffing'}).click();await expect(page.locator('.game-card')).toHaveCount(4);
+ await page.getByRole('button',{name:'Social & bluffing'}).click();await expect(page.locator('.game-card')).toHaveCount(3);
  await page.getByRole('button',{name:'All games'}).click();await page.locator('[data-game="signals"]').first().click();await expect(page.getByRole('dialog')).toBeVisible();await expect(page.locator('.rule-list li')).toHaveCount(3);await page.keyboard.press('Escape');await expect(page.getByRole('dialog')).toHaveCount(0);
  await page.setViewportSize({width:390,height:844});await page.screenshot({path:'test-results/lounge-mobile.png',fullPage:true});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  await page.getByRole('button',{name:'Join a room'}).click();await page.locator('#player-name').fill('Tester');await page.locator('#room-code').fill('XXXXX');await page.getByRole('button',{name:'Join the room'}).click();await expect(page.locator('.form-error')).toContainText('No room');
@@ -22,7 +22,6 @@ for(const id of Object.keys(titles))test(`${titles[id]}: interactive practice th
  const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.setViewportSize({width:390,height:844});await practice(page,id);
  if(id==='signals'||id==='decoy'){await submitText(page,'Together');await continueDemo(page);if(id==='decoy')await continueDemo(page);}
  if(id==='crowd'){await submitText(page,'10000');await continueDemo(page);}
- if(id==='seat'){await page.getByRole('button',{name:'Everyone ready?'}).click();await page.locator('.destination').nth(3).click();await page.getByRole('button',{name:'Lock my choice'}).click();}
  if(id==='twins'){await submitText(page,'Familiar');await continueDemo(page);await expect(page.locator('.partner-card')).toHaveCount(5);await page.locator('.partner-card').first().click();await page.getByRole('button',{name:'Found my person'}).click();}
  if(id==='borrowed'){
   for(let i=0;i<3;i++)await page.locator('.word-card').nth(i).click();await page.getByRole('button',{name:'Remove 3/3 words'}).click();await continueDemo(page);
@@ -51,22 +50,14 @@ test('six independent browser sessions join and play together, preserving privat
  }finally{await Promise.all(contexts.map(c=>c.close()));}
 });
 
-test('Last Seat can be finished, rematched, and returned to the lounge',async({page})=>{
- await practice(page,'seat');
- for(let round=1;round<=6;round++){
-  await page.getByRole('button',{name:'Everyone ready?'}).click();await page.locator('.destination').nth(3).click();await page.getByRole('button',{name:'Lock my choice'}).click();await continueDemo(page);await expect(page.locator('.reveal-rows')).toBeVisible();await page.getByRole('button',{name:round===6?'See the final scores':'One more round'}).click();
- }
- await expect(page.locator('.final-scores')).toBeVisible();await expect(page.locator('.final-score')).toHaveCount(6);await page.screenshot({path:'test-results/final-scores.png',fullPage:true});await page.getByRole('button',{name:'Play again'}).click();await expect(page.locator('.round-status')).toContainText('1');
- await page.getByRole('button',{name:'Back to the lounge'}).click();await page.getByRole('button',{name:'Back to lounge',exact:true}).click();await expect(page.locator('.lobby-title')).toBeVisible();await page.getByRole('button',{name:'Leave room',exact:true}).click();await expect(page.locator('.hero')).toBeVisible();
-});
-
 test('API rejects unauthorized and stale submissions',async({request})=>{
- const created=await request.post('/api/create',{data:{name:'API Host',practice:true,game:'seat'}});const {code,token,state}=await created.json();
+ const created=await request.post('/api/create',{data:{name:'API Host',practice:true,game:'crowd'}});const {code,token,state}=await created.json();
  const headers={Authorization:'Bearer '+token,'X-Room-Code':code};
  expect((await request.get('/api/state',{headers:{...headers,Authorization:'Bearer invalid'}})).status()).toBe(400);
- const old={game:'seat',round:state.round,stage:'talk',phaseId:state.phaseId};
- expect((await request.post('/api/action',{headers,data:{...old,action:'skipTalk'}})).ok()).toBe(true);
+ const old={game:'crowd',round:state.round,stage:'tune',phaseId:state.phaseId};
+ expect((await request.post('/api/action',{headers,data:{...old,action:'submit',value:'100'}})).ok()).toBe(true);
+ await request.post('/api/action',{headers,data:{...old,action:'continuePractice'}});
  const stale=await request.post('/api/action',{headers,data:{...old,action:'submit',value:0}});expect(stale.status()).toBe(400);expect((await stale.json()).error).toContain('moved on');
  const crossOrigin=await request.post('/api/action',{headers:{...headers,Origin:'https://example.com'},data:{...old,action:'lobby'}});expect(crossOrigin.status()).toBe(403);
- const bad=await request.post('/api/action',{headers,data:{...old,stage:'pick',action:'submit',value:99}});expect(bad.status()).toBe(400);
+ const bad=await request.post('/api/action',{headers,data:{...old,stage:'vote',action:'submit',value:99}});expect(bad.status()).toBe(400);
 });

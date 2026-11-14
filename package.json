@@ -3,14 +3,16 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Seven real-time party games for friends, built with plain JavaScript and Node.js.",
+  "description": "Six real-time party games for friends, built with plain JavaScript and Node.js.",
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
     "build": "node -e \"console.log('After Hours: Vercel ready')\"",
     "test": "node --test test/*.test.js",
     "test:ui": "playwright test",
-    "test:load": "node test/load.mjs"
+    "test:load": "node test/load.mjs",
+    "test:packed": "node --test test/packed.test.js",
+    "test:exhaustive": "node test/packed-exhaustive.mjs"
   },
   "engines": {
     "node": ">=20"

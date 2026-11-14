@@ -2,8 +2,9 @@ FROM node:24-alpine
 WORKDIR /app
 COPY --chown=node:node package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
-COPY --chown=node:node server.js engine.js bots.js data.js variety.js lone.js lone-content.js ./
+COPY --chown=node:node server.js engine.js bots.js data.js variety.js packed.js packed-content.js ./
 COPY --chown=node:node public ./public
+COPY --chown=node:node lib ./lib
 USER node
 ENV NODE_ENV=production
 ENV PORT=3000

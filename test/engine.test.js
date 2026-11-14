@@ -3,13 +3,12 @@ import assert from 'node:assert/strict';
 import { createRoom, joinRoom, startGame, act, view, tick, expected } from '../engine.js';
 import { games, prompts, pairSets, pairHints } from '../data.js';
 
-function setup(game,n=6){const {room,host}=createRoom('ABCDE','Alice');for(let i=1;i<n;i++)joinRoom(room,'Player '+i);startGame(room,host.id,game);return room;}
+function setup(game,n=6){const {room,host}=createRoom('ABCDE','Alice');if(game==='packed')room.selectedGame='packed';for(let i=1;i<n;i++)joinRoom(room,'Player '+i);startGame(room,host.id,game);return room;}
 function answer(r,id){const d=r.data;
- if(r.game==='lone')return r.stage==='rank'?d.board.map((_,i)=>i):r.players.findIndex(p=>p.id===id)%d.board.length;
+ if(r.game==='packed')return r.stage==='rank'?d.board.map((_,i)=>i):r.players.findIndex(p=>p.id===id)%d.board.length;
  if(r.game==='signals')return r.stage==='clue'?d.suggested:d.boards[id].target;
  if(r.game==='decoy')return r.stage==='clue'?d.suggested:r.stage==='sabotage'?0:d.board.indexOf(d.target);
  if(r.game==='crowd')return r.stage==='tune'?'1000':expected(r).indexOf(id)<d.target;
- if(r.game==='seat')return 3;
  if(r.game==='twins')return r.stage==='clue'?'Mystery':d.partners[id];
  if(r.game==='borrowed'){
   const t=d.teams.findIndex(a=>a.includes(id));
@@ -20,8 +19,9 @@ function answer(r,id){const d=r.data;
 }
 function completeRound(r){for(let guard=0;r.stage!=='reveal'&&guard<10;guard++){
  if(r.stage==='talk'){act(r,r.host,'skipTalk');continue;}
+ if(r.game==='packed'&&['question','tiers'].includes(r.stage)){tick(r,r.deadline+1);continue;}
  const phase=r.stage;for(const id of expected(r)){assert.equal(r.stage,phase);act(r,id,'submit',answer(r,id));}
- if(r.game==='lone'&&r.stage==='pick')tick(r,r.deadline+1);
+ if(r.game==='packed'&&['rank','pick'].includes(r.stage))tick(r,r.deadline+1);
  }assert.equal(r.stage,'reveal');}
 
 for(const game of Object.keys(games))test(`${game}: a full multiplayer game, score, rotation, rematch`,()=>{
@@ -68,9 +68,6 @@ test('reject invalid input and role impersonation',()=>{
 test('room limits, player names, and even team sizes',()=>{
  const {room,host}=createRoom('ABCD2','Alice');assert.throws(()=>joinRoom(room,'alice'),/taken/);assert.throws(()=>joinRoom(room,''));assert.throws(()=>startGame(room,host.id,'signals'),/needs/);
  for(let i=0;i<6;i++)joinRoom(room,'P'+i);assert.throws(()=>startGame(room,host.id,'twins'),/even/);assert.throws(()=>startGame(room,host.id,'borrowed'),/even/);joinRoom(room,'P7');assert.throws(()=>joinRoom(room,'P8'),/full/);
-});
-test('overbooked destinations pay zero to everybody there',()=>{
- const r=setup('seat');act(r,r.host,'skipTalk');for(const p of r.players)act(r,p.id,'submit',0);assert.equal(r.stage,'reveal');assert.ok(r.players.every(p=>p.score===0));assert.ok(r.result.rows.every(x=>!x.correct));
 });
 test('mutual pairing is required',()=>{
  const r=setup('twins');for(const p of r.players)act(r,p.id,'submit','Hint');const ids=r.players.map(p=>p.id);for(let i=0;i<ids.length;i++)act(r,ids[i],'submit',ids[(i+1)%ids.length]);assert.ok(r.players.every(p=>p.score===0));

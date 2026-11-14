@@ -4,7 +4,7 @@ import { createRoom, joinRoom, startGame, act, expected, tick, view, shuffle } f
 import { chooseBotAction } from '../bots.js';
 import { games } from '../data.js';
 
-function setup(game,practice=false,n=6){const {room:r,host}=createRoom('STRES','Miso',practice);if(!practice)for(let i=1;i<n;i++)joinRoom(r,'Player '+i);startGame(r,host.id,game);return r;}
+function setup(game,practice=false,n=6){const {room:r,host}=createRoom('STRES','Miso',practice);if(game==='packed')r.selectedGame='packed';if(!practice)for(let i=1;i<n;i++)joinRoom(r,'Player '+i);startGame(r,host.id,game);return r;}
 function checkHand(r){if(r.game!=='borrowed')return;for(const hand of r.data.sets){assert.equal(hand.hand.length,12);assert.equal(new Set(hand.hand).size,12);assert.equal(hand.initialHand.length,12);for(const i of hand.removed)assert.equal(hand.hand[i],hand.initialHand[i]);}}
 
 test('practice never skips a completed step, times out, or advances twice',()=>{
@@ -32,13 +32,13 @@ test('bots reason from visible clues instead of reading the hidden target',()=>{
 test('invalid games, repeated actions, names, and late submissions are rejected safely',()=>{
  const {room:r,host}=createRoom('ABCDE','Miso',true);assert.equal(new Set(r.players.map(p=>p.name.toLowerCase())).size,6);
  for(const game of ['__proto__','constructor','toString',{},null,42])assert.throws(()=>startGame(r,host.id,game),/Choose a game/);
- const normal=setup('seat');act(normal,normal.host,'skipTalk');normal.deadline=Date.now()-1;assert.throws(()=>act(normal,normal.host,'submit',0),/Time is up/);assert.equal(Object.keys(normal.actions).length,0);tick(normal);assert.equal(normal.stage,'reveal');
+ const normal=setup('crowd');normal.deadline=Date.now()-1;assert.throws(()=>act(normal,normal.host,'submit','100'),/Time is up/);assert.equal(Object.keys(normal.actions).length,0);tick(normal);assert.equal(normal.stage,'vote');
 });
 
-test('1400 complete randomized games: all roles, player counts, timeouts, redraws, rematches, privacy, and scoring',t=>{
+test('1200 complete randomized games: all roles, player counts, timeouts, redraws, rematches, privacy, and scoring',t=>{
  let rounds=0,actions=0;
  for(const game of Object.keys(games))for(let run=0;run<200;run++){
-  const practice=run%2===0;const counts=game==='twins'?[6,8]:game==='borrowed'?[4,6,8]:game==='decoy'?[5,6,7,8]:[4,5,6,7,8];
+  const practice=run%2===0;const counts=game==='twins'?[6,8]:game==='borrowed'?[4,6,8]:game==='packed'?[5,6,7,8,9,10]:game==='decoy'?[5,6,7,8]:[4,5,6,7,8];
   const r=setup(game,practice,counts[run%counts.length]);const totals=Object.fromEntries(r.players.map(p=>[p.id,0]));let guard=0;
   while(r.status==='playing'&&guard++<100){
    checkHand(r);
@@ -49,12 +49,13 @@ test('1400 complete randomized games: all roles, player counts, timeouts, redraw
    }
    if(r.practiceReady){const phase=r.phaseId;tick(r,Date.now()+999999);assert.equal(r.phaseId,phase);act(r,r.host,'continuePractice');continue;}
    if(r.stage==='talk'){act(r,r.host,'skipTalk');continue;}
+   if(r.game==='packed'&&['question','tiers'].includes(r.stage)){tick(r,r.deadline+1);continue;}
    if(!practice&&run%5===1&&r.round%2===0){tick(r,r.deadline+1);continue;}
    for(const id of expected(r).filter(id=>!(id in r.actions))){
     if(r.game==='borrowed'&&r.stage==='clue'&&run%3===0&&!r.data.sets[r.data.givers.indexOf(id)].redrawn)act(r,id,'redraw');
     const answer=chooseBotAction(view(r,id));act(r,id,'submit',answer);actions++;
    }
-   if(r.game==='lone'&&!r.practice&&r.stage==='pick')tick(r,r.deadline+1);
+   if(r.game==='packed'&&!r.practice&&['rank','pick'].includes(r.stage))tick(r,r.deadline+1);
   }
   assert.equal(r.status,'finished',`${game}, run ${run}, stage ${r.stage}`);const phase=r.phaseId;startGame(r,r.host,game);assert.ok(r.phaseId>phase);assert.ok(r.players.every(p=>p.score===0));
  }

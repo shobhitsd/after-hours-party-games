@@ -48,7 +48,7 @@ test('opponent hand, own hand, exact removed words, and intentional redraw remai
  await page.screenshot({path:'test-results/borrowed-hands-desktop.png',fullPage:true});
 });
 
-for(const game of ['signals','decoy','crowd','seat','twins','borrowed'])test(`${game}: full practice game through every human role, every round, final scores, and rematch`,async({page})=>{
+for(const game of ['signals','decoy','crowd','twins','borrowed'])test(`${game}: full practice game through every human role, every round, final scores, and rematch`,async({page})=>{
  test.setTimeout(120000);const errors=[];page.on('pageerror',error=>errors.push(error.message));await begin(page,game);const roles=new Set();let steps=0;
  while(steps++<80){
   const s=await snapshot(page);roles.add(s.role);
@@ -63,28 +63,6 @@ for(const game of ['signals','decoy','crowd','seat','twins','borrowed'])test(`${
  if(game==='borrowed')expect([...roles]).toEqual(expect.arrayContaining(['Clue-giver','Guesser']));
  if(game==='signals')expect([...roles]).toEqual(expect.arrayContaining(['Signal sender','Receiver']));
  await page.locator('[data-action="rematch"]').click();await expect(page.locator('.round-status')).toContainText('1');expect((await snapshot(page)).players.every(p=>p.score===0)).toBe(true);
-});
-
-test('duplicate tabs remain connected and a locked choice restores on both',async({browser})=>{
- const context=await browser.newContext(),page=await context.newPage();await begin(page,'seat');const auth=await credentials(page);const other=await context.newPage();
- await other.addInitScript(auth=>sessionStorage.setItem('afterhours-session',JSON.stringify(auth)),auth);await other.goto('/');await expect(other.locator('.play-heading')).toContainText('Last Seat');
- await page.locator('[data-action="skipTalk"]').click();await expect(other.locator('.destination:not([disabled])')).toHaveCount(4);
- await other.locator('[data-choice="3"]').click();await other.locator('[data-action="lock"]').click();await expect(page.locator('.destination.picked')).toHaveCount(1);await expect(page.locator('.destination.picked')).toContainText((await snapshot(page)).destinations[3].name);
- await expect(page.getByRole('button',{name:'Continue demo'})).toBeEnabled();await expect(other.getByRole('button',{name:'Continue demo'})).toBeEnabled();await page.reload();await expect(page.locator('.destination.picked')).toHaveCount(1);await expect(page.locator('#connection-label')).toHaveText('Connected');await expect(other.locator('#connection-label')).toHaveText('Connected');
- await context.close();
-});
-
-test('delayed HTTP responses cannot move a live game back to an earlier phase',async({page,request})=>{
- const host=await (await request.post('/api/create',{data:{name:'Host'}})).json();const guests=[];
- for(let i=0;i<3;i++)guests.push(await (await request.post('/api/join',{data:{name:'Guest '+i,code:host.code}})).json());
- const headers={Authorization:'Bearer '+host.token,'X-Room-Code':host.code};await request.post('/api/start',{headers,data:{game:'signals'}});
- await page.addInitScript(auth=>sessionStorage.setItem('afterhours-session',JSON.stringify(auth)),{code:host.code,token:host.token});await page.goto('/');await expect(page.locator('#answer-input')).toBeVisible();
- let releaseResponse;const held=new Promise(resolve=>releaseResponse=resolve);let responseCaptured;const captured=new Promise(resolve=>responseCaptured=resolve);
- await page.route('**/api/action',async route=>{const response=await route.fetch();responseCaptured();await held;await route.fulfill({response});});
- await page.locator('#answer-input').fill('Together');await page.getByRole('button',{name:'Send it'}).click();await captured;
- const next=(await (await request.get('/api/state',{headers})).json()).state;
- for(const guest of guests)await request.post('/api/action',{headers:{Authorization:'Bearer '+guest.token,'X-Room-Code':host.code},data:{game:'signals',round:next.round,stage:next.stage,phaseId:next.phaseId,action:'submit',value:0}});
- await expect(page.locator('.reveal-rows')).toBeVisible();releaseResponse();await expect(page.locator('[data-action="next"]')).toBeEnabled();await expect(page.locator('.reveal-rows')).toBeVisible();await expect(page.locator('#answer-input')).toHaveCount(0);
 });
 
 test('small screens, Unicode names, and typing survive live bot updates and refresh',async({page})=>{
