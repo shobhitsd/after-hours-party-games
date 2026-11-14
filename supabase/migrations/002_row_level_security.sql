@@ -114,3 +114,4 @@ CREATE POLICY "Only service role can read telemetry"
   ON telemetry_events FOR SELECT
   TO service_role
   USING (true);
+

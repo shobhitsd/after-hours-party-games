@@ -40,3 +40,4 @@ CREATE POLICY "Service role full control on storage"
   TO service_role
   USING (true)
   WITH CHECK (true);
+

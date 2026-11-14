@@ -126,3 +126,4 @@ if (isSqlMode) {
 } else {
   seedDirectly();
 }
+

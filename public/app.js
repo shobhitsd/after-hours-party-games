@@ -108,6 +108,7 @@ function render(force=false){
  updateClock();
 }
 function setState(s){const previous=state;if(previous?.code===s.code&&s.revision<previous.revision)return;state=s;if(s.options)gameOptions={...s.options};if(s.status==='lobby')chosen=s.selectedGame;clockOffset=s.serverTime-Date.now();render();if(previous&&phaseKey(previous)!==phaseKey(s)){tone(s.stage==='reveal'?660:440);if(['reveal','finished'].includes(s.stage))celebrate();if(s.status!=='lobby')$('#stage-content')?.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});}}
+window.setState=setState;window.getState=()=>state;window.render=render;
 async function api(path,data){const response=await fetch('/api/'+path,{method:data?'POST':'GET',headers:{...(data?{'Content-Type':'application/json'}:{}),...(session?{'Authorization':'Bearer '+session.token,'X-Room-Code':session.code}:{})},...(data?{body:JSON.stringify(data)}:{})});const result=await response.json();if(!response.ok)throw new Error(result.error||'Could not connect. Try again.');return result;}
 async function connect(){
  if(!session)return;streamController?.abort();streamController=new AbortController();const controller=streamController;
@@ -149,6 +150,50 @@ document.addEventListener('change',async e=>{
  catch(error){gameOptions=previous;render(true);toast(error.message);}
 });
 document.addEventListener('click',async e=>{
+ const dropdownToggle = e.target.closest('[data-toggle-dropdown]');
+ if (dropdownToggle) {
+  e.preventDefault();
+  const dropdown = dropdownToggle.closest('.custom-select');
+  const wasOpen = dropdown?.classList.contains('is-open');
+  document.querySelectorAll('.custom-select.is-open').forEach(d => {
+   d.classList.remove('is-open');
+   d.querySelector('.custom-select-trigger')?.setAttribute('aria-expanded', 'false');
+  });
+  if (!wasOpen && dropdown) {
+   dropdown.classList.add('is-open');
+   dropdownToggle.setAttribute('aria-expanded', 'true');
+  }
+  return;
+ }
+ const dropdownOpt = e.target.closest('[data-select-dropdown]');
+ if (dropdownOpt) {
+  e.preventDefault();
+  const dropdownId = dropdownOpt.dataset.selectDropdown;
+  const val = dropdownOpt.dataset.value;
+  const dropdown = dropdownOpt.closest('.custom-select');
+  if (dropdown) {
+   dropdown.classList.remove('is-open');
+   dropdown.querySelector('.custom-select-trigger')?.setAttribute('aria-expanded', 'false');
+  }
+  const nativeSelect = document.getElementById(dropdownId);
+  if (nativeSelect) {
+   nativeSelect.value = val;
+   if (nativeSelect.dataset.loneField) {
+    loneLocal[nativeSelect.dataset.loneField] = val;
+    sessionStorage.setItem('afterhours-draft', JSON.stringify({ key: phaseKey(state), selected, draft, loneLocal }));
+   }
+   nativeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+  tone(480);
+  render();
+  return;
+ }
+ if (!e.target.closest('.custom-select')) {
+  document.querySelectorAll('.custom-select.is-open').forEach(d => {
+   d.classList.remove('is-open');
+   d.querySelector('.custom-select-trigger')?.setAttribute('aria-expanded', 'false');
+  });
+ }
  const target=e.target.closest('[data-rank-move],[data-belief],[data-action],[data-game],[data-filter],[data-rules],[data-choice],[data-vote],[data-partner],[data-select-game],[data-select-spy]');
  if(!target){if(e.target.classList.contains('modal-backdrop'))closeModal();return;}
  if(target.disabled)return;
@@ -196,7 +241,131 @@ document.addEventListener('submit',async e=>{
   if(form.id==='answer-form')await action('submit',values.get('answer'));
  }catch(err){const error=form.querySelector('.form-error');if(error)error.textContent=err.message;else toast(err.message);}finally{if(submit)submit.disabled=false;}
 });
-document.addEventListener('keydown',e=>{if(!modal)return;if(e.key==='Escape')closeModal();if(e.key==='Tab'){const focusable=[...modalRoot.querySelectorAll('button:not([disabled]),input,select:not([disabled]),a[href]')];const first=focusable[0],last=focusable.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
+document.addEventListener('keydown',e=>{
+ if (e.key === 'Escape') {
+  document.querySelectorAll('.custom-select.is-open').forEach(d => {
+   d.classList.remove('is-open');
+   d.querySelector('.custom-select-trigger')?.setAttribute('aria-expanded', 'false');
+  });
+ }
+ if(!modal)return;if(e.key==='Escape')closeModal();if(e.key==='Tab'){const focusable=[...modalRoot.querySelectorAll('button:not([disabled]),input,select:not([disabled]),a[href]')];const first=focusable[0],last=focusable.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
+// Drag & Drop Reordering for Ranking
+let touchDrag = null;
+
+function getRankItemUnderPointer(clientY) {
+ const items = [...document.querySelectorAll('.rank-list .rank-item')];
+ for (const it of items) {
+  const rect = it.getBoundingClientRect();
+  if (clientY >= rect.top && clientY <= rect.bottom) return it;
+ }
+ return null;
+}
+
+document.addEventListener('pointerdown', e => {
+ const handle = e.target.closest('.rank-drag-handle');
+ if (!handle) return;
+ const item = handle.closest('.rank-item');
+ if (!item || item.getAttribute('draggable') !== 'true') return;
+ const fromPos = Number(item.dataset.rankPos);
+ if (isNaN(fromPos)) return;
+
+ touchDrag = { fromPos, itemEl: item, pointerId: e.pointerId };
+ try { handle.setPointerCapture(e.pointerId); } catch {}
+ item.classList.add('is-dragging');
+});
+
+document.addEventListener('pointermove', e => {
+ if (!touchDrag || e.pointerId !== touchDrag.pointerId) return;
+ const targetItem = getRankItemUnderPointer(e.clientY);
+ 
+ document.querySelectorAll('.rank-item.drag-target').forEach(el => el.classList.remove('drag-target'));
+ if (targetItem && targetItem !== touchDrag.itemEl) {
+  targetItem.classList.add('drag-target');
+ }
+});
+
+function endTouchDrag(e) {
+ if (!touchDrag || e.pointerId !== touchDrag.pointerId) return;
+ const from = touchDrag.fromPos;
+ touchDrag.itemEl.classList.remove('is-dragging');
+ 
+ const targetItem = getRankItemUnderPointer(e.clientY);
+ document.querySelectorAll('.rank-item.drag-target').forEach(el => el.classList.remove('drag-target'));
+ 
+ const handle = touchDrag.itemEl.querySelector('.rank-drag-handle');
+ try { handle?.releasePointerCapture(e.pointerId); } catch {}
+ touchDrag = null;
+
+ if (targetItem) {
+  const to = Number(targetItem.dataset.rankPos);
+  if (!isNaN(to) && from !== to && selected[from] !== undefined && selected[to] !== undefined) {
+   const [moved] = selected.splice(from, 1);
+   selected.splice(to, 0, moved);
+   tone(400);
+   render();
+  }
+ }
+}
+
+document.addEventListener('pointerup', endTouchDrag);
+document.addEventListener('pointercancel', endTouchDrag);
+
+let htmlDragFrom = null;
+
+document.addEventListener('dragstart', e => {
+ const item = e.target.closest('.rank-item');
+ if (!item || item.getAttribute('draggable') !== 'true') return;
+ htmlDragFrom = Number(item.dataset.rankPos);
+ e.dataTransfer.setData('text/plain', String(htmlDragFrom));
+ e.dataTransfer.effectAllowed = 'move';
+ item.classList.add('is-dragging');
+});
+
+document.addEventListener('dragover', e => {
+ if (htmlDragFrom === null) return;
+ const targetItem = e.target.closest('.rank-item');
+ if (!targetItem) return;
+ e.preventDefault();
+ e.dataTransfer.dropEffect = 'move';
+ document.querySelectorAll('.rank-item.drag-target').forEach(el => el.classList.remove('drag-target'));
+ if (Number(targetItem.dataset.rankPos) !== htmlDragFrom) {
+  targetItem.classList.add('drag-target');
+ }
+});
+
+document.addEventListener('dragleave', e => {
+ const targetItem = e.target.closest('.rank-item');
+ if (targetItem && !targetItem.contains(e.relatedTarget)) {
+  targetItem.classList.remove('drag-target');
+ }
+});
+
+document.addEventListener('drop', e => {
+ if (htmlDragFrom === null) return;
+ const targetItem = e.target.closest('.rank-item');
+ document.querySelectorAll('.rank-item.drag-target').forEach(el => el.classList.remove('drag-target'));
+ if (!targetItem) { htmlDragFrom = null; return; }
+ e.preventDefault();
+ 
+ const from = htmlDragFrom;
+ const to = Number(targetItem.dataset.rankPos);
+ htmlDragFrom = null;
+
+ if (!isNaN(to) && from !== to && selected[from] !== undefined && selected[to] !== undefined) {
+  const [moved] = selected.splice(from, 1);
+  selected.splice(to, 0, moved);
+  tone(400);
+  render();
+ }
+});
+
+document.addEventListener('dragend', () => {
+ htmlDragFrom = null;
+ document.querySelectorAll('.rank-item.is-dragging, .rank-item.drag-target').forEach(el => {
+  el.classList.remove('is-dragging', 'drag-target');
+ });
+});
+
 async function init(){try{[games,{addresses:network},optionCatalog]=await Promise.all([api('games'),api('network'),api('options')]);gameOptions={...optionCatalog.defaults};if(session){try{const r=await api('state');setState(r.state);connect();}catch{clearSession();render();toast('Your previous room has ended. Start a fresh one.');}}else render();const room=new URLSearchParams(location.search).get('room');if(room&&!session)openModal('join',room.toUpperCase());}catch{app.innerHTML='<main class="offline"><h1>The lounge is taking a breather.</h1><p>Start the server with START GAMES.cmd, then refresh this page.</p><button data-action="reload">Try again</button></main>';}}
 window.addEventListener('error', e => {
  if (e.target && e.target.tagName === 'IMG' && (e.target.classList.contains('card-option-img') || e.target.classList.contains('rank-thumb-img') || e.target.classList.contains('reveal-option-img') || e.target.classList.contains('claim-thumb-img') || e.target.classList.contains('private-rank-thumb'))) {

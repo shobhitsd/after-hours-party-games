@@ -51,7 +51,7 @@ WITH ins_s AS (
 INSERT INTO scenario_options (scenario_id, text, image_url, order_index)
 SELECT ins_s.id, opt.text, opt.image_url, opt.order_index
 FROM ins_s, (VALUES
-  ('Football / Soccer', 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80', 0),
+  ('Football / Soccer', 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=400&q=80', 0),
   ('Cricket in the Park', 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=400&q=80', 1),
   ('Basketball Half-Court', 'https://images.unsplash.com/photo-1519861531473-9200262188bf?auto=format&fit=crop&w=400&q=80', 2),
   ('Tennis Doubles', 'https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?auto=format&fit=crop&w=400&q=80', 3),
@@ -59,7 +59,7 @@ FROM ins_s, (VALUES
   ('Beach Volleyball', 'https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?auto=format&fit=crop&w=400&q=80', 5),
   ('Table Tennis / Ping Pong', 'https://images.unsplash.com/photo-1534158914592-062992fbe900?auto=format&fit=crop&w=400&q=80', 6),
   ('Cosmic Bowling', 'https://images.unsplash.com/photo-1538330627166-33d1908c210d?auto=format&fit=crop&w=400&q=80', 7),
-  ('Ultimate Frisbee', 'https://images.unsplash.com/photo-1589487391730-58f20eb2c308?auto=format&fit=crop&w=400&q=80', 8)
+  ('Ultimate Frisbee', 'https://images.unsplash.com/photo-1660302335890-67aa1cd4a26d?auto=format&fit=crop&w=400&q=80', 8)
 ) AS opt(text, image_url, order_index);
 
 -- Scenario 4: Which TV series would you binge-watch to...
@@ -74,9 +74,9 @@ FROM ins_s, (VALUES
   ('Friends', 'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=400&q=80', 0),
   ('The Office', 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=400&q=80', 1),
   ('Stranger Things', 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=400&q=80', 2),
-  ('Wednesday', 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=400&q=80', 3),
+  ('Wednesday', 'https://images.unsplash.com/photo-1603584915335-d612257071b0?auto=format&fit=crop&w=400&q=80', 3),
   ('Sherlock', 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=400&q=80', 4),
-  ('Brooklyn Nine-Nine', 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=400&q=80', 5),
+  ('Brooklyn Nine-Nine', 'https://images.unsplash.com/photo-1589578527966-fdac0f44566c?auto=format&fit=crop&w=400&q=80', 5),
   ('Modern Family', 'https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=400&q=80', 6),
   ('Ted Lasso', 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=400&q=80', 7),
   ('Game of Thrones', 'https://images.unsplash.com/photo-1514539079130-25950c84af65?auto=format&fit=crop&w=400&q=80', 8)
@@ -91,9 +91,9 @@ WITH ins_s AS (
 INSERT INTO scenario_options (scenario_id, text, image_url, order_index)
 SELECT ins_s.id, opt.text, opt.image_url, opt.order_index
 FROM ins_s, (VALUES
-  ('Flight', 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=400&q=80', 0),
-  ('Teleportation', 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80', 1),
-  ('Invisibility', 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=400&q=80', 2),
+  ('Flight', 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?auto=format&fit=crop&w=400&q=80', 0),
+  ('Teleportation', 'https://images.unsplash.com/photo-1507499739999-097706ad8914?auto=format&fit=crop&w=400&q=80', 1),
+  ('Invisibility', 'https://images.unsplash.com/photo-1517816743773-6e0fd518b4a6?auto=format&fit=crop&w=400&q=80', 2),
   ('Time Travel', 'https://images.unsplash.com/photo-1501139083538-0139583c060f?auto=format&fit=crop&w=400&q=80', 3),
   ('Instant Healing', 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=400&q=80', 4),
   ('Mind Reading', 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=400&q=80', 5),
@@ -155,7 +155,7 @@ FROM ins_s, (VALUES
   ('Wakanda High-Tech City', 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=400&q=80', 1),
   ('The Shire in Middle-earth', 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=400&q=80', 2),
   ('Lantern Waste, Narnia', 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=400&q=80', 3),
-  ('Gotham City Rooftops', 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=400&q=80', 4),
+  ('Gotham City Rooftops', 'https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=400&q=80', 4),
   ('Atlantis Coral Palace', 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=400&q=80', 5),
   ('Neverland Secret Lagoon', 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=400&q=80', 6),
   ('Asgard Golden City', 'https://images.unsplash.com/photo-1514539079130-25950c84af65?auto=format&fit=crop&w=400&q=80', 7),
@@ -351,15 +351,15 @@ WITH ins_s AS (
 INSERT INTO scenario_options (scenario_id, text, image_url, order_index)
 SELECT ins_s.id, opt.text, opt.image_url, opt.order_index
 FROM ins_s, (VALUES
-  ('Aluminium Baseball Bat', 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80', 0),
+  ('Aluminium Baseball Bat', 'https://images.unsplash.com/photo-1653681441421-831baa165bbf?auto=format&fit=crop&w=400&q=80', 0),
   ('Steel Katana Sword', 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=400&q=80', 1),
-  ('Hunting Crossbow & Bolts', 'https://images.unsplash.com/photo-1589487391730-58f20eb2c308?auto=format&fit=crop&w=400&q=80', 2),
-  ('Gas-Powered Chainsaw', 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=400&q=80', 3),
+  ('Hunting Crossbow & Bolts', 'https://images.unsplash.com/photo-1646186147988-873987270189?auto=format&fit=crop&w=400&q=80', 2),
+  ('Gas-Powered Chainsaw', 'https://images.unsplash.com/photo-1696883186987-299ff16b0cac?auto=format&fit=crop&w=400&q=80', 3),
   ('Heavy Cast Iron Skillet', 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=400&q=80', 4),
-  ('Hardened Steel Crowbar', 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=400&q=80', 5),
-  ('Demolition Sledgehammer', 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=400&q=80', 6),
-  ('Compound Archery Bow', 'https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=400&q=80', 7),
-  ('Heavy Duty Fire Axe', 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=400&q=80', 8)
+  ('Hardened Steel Crowbar', 'https://images.unsplash.com/photo-1560793385-16b0e5de8590?auto=format&fit=crop&w=400&q=80', 5),
+  ('Demolition Sledgehammer', 'https://images.unsplash.com/photo-1566937169390-7be4c63b8a0e?auto=format&fit=crop&w=400&q=80', 6),
+  ('Compound Archery Bow', 'https://images.unsplash.com/photo-1654593321497-1dea66d89091?auto=format&fit=crop&w=400&q=80', 7),
+  ('Heavy Duty Fire Axe', 'https://images.unsplash.com/photo-1567141241030-9dea446dc13b?auto=format&fit=crop&w=400&q=80', 8)
 ) AS opt(text, image_url, order_index);
 
 -- Scenario 19: What is your first ridiculous purchase a...
@@ -533,13 +533,13 @@ SELECT ins_s.id, opt.text, opt.image_url, opt.order_index
 FROM ins_s, (VALUES
   ('Spider-Man (Peter Parker)', 'https://images.unsplash.com/photo-1604200213928-ba3cf4fc8436?auto=format&fit=crop&w=400&q=80', 0),
   ('Iron Man (Tony Stark)', 'https://images.unsplash.com/photo-1635863138275-d9b33299680b?auto=format&fit=crop&w=400&q=80', 1),
-  ('Batman (Bruce Wayne)', 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=400&q=80', 2),
+  ('Batman (Bruce Wayne)', 'https://images.unsplash.com/photo-1531259683007-016a7b628fc3?auto=format&fit=crop&w=400&q=80', 2),
   ('Wonder Woman (Diana Prince)', 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=400&q=80', 3),
   ('Deadpool (Wade Wilson)', 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=400&q=80', 4),
   ('Scarlet Witch (Wanda Maximoff)', 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=400&q=80', 5),
   ('Wolverine (Logan)', 'https://images.unsplash.com/photo-1534188753412-3e26d0d618d6?auto=format&fit=crop&w=400&q=80', 6),
-  ('Thor Odinson', 'https://images.unsplash.com/photo-1514539079130-25950c84af65?auto=format&fit=crop&w=400&q=80', 7),
-  ('Doctor Strange (Stephen Strange)', 'https://images.unsplash.com/photo-1501139083538-0139583c060f?auto=format&fit=crop&w=400&q=80', 8)
+  ('Thor Odinson', 'https://images.unsplash.com/photo-1509114397022-ed747cca3f65?auto=format&fit=crop&w=400&q=80', 7),
+  ('Doctor Strange (Stephen Strange)', 'https://images.unsplash.com/photo-1507499739999-097706ad8914?auto=format&fit=crop&w=400&q=80', 8)
 ) AS opt(text, image_url, order_index);
 
 -- Scenario 28: Which comfort food hit the spot after a ...
@@ -795,7 +795,7 @@ FROM ins_s, (VALUES
   ('Gentle Senior Golden Retriever', 'https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=400&q=80', 1),
   ('Big Affectionate Orange Tabby Cat', 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=400&q=80', 2),
   ('Floppy-Eared Sleepy Basset Hound', 'https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?auto=format&fit=crop&w=400&q=80', 3),
-  ('Giant Fluffy Bernese Mountain Pup', 'https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=400&q=80', 4),
+  ('Giant Fluffy Bernese Mountain Pup', 'https://images.unsplash.com/photo-1781715634838-8f124ccdc4b4?auto=format&fit=crop&w=400&q=80', 4),
   ('Ultra-Smart Tri-Color Border Collie', 'https://images.unsplash.com/photo-1503256207526-0d5d80fa2f47?auto=format&fit=crop&w=400&q=80', 5),
   ('Tiny Playful Calico Kitten', 'https://images.unsplash.com/photo-1573865526739-10659fec78a5?auto=format&fit=crop&w=400&q=80', 6),
   ('Gentle Sniffing Rescue Beagle', 'https://images.unsplash.com/photo-1505628346881-b72b27e84530?auto=format&fit=crop&w=400&q=80', 7),
@@ -1292,12 +1292,12 @@ INSERT INTO scenario_options (scenario_id, text, image_url, order_index)
 SELECT ins_s.id, opt.text, opt.image_url, opt.order_index
 FROM ins_s, (VALUES
   ('Eternally Smiling Golden Retriever', 'https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=400&q=80', 0),
-  ('Noble Protective German Shepherd', 'https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=400&q=80', 1),
-  ('Short-Legged Energetic Welsh Corgi', 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=400&q=80', 2),
-  ('Vocal Blue-Eyed Siberian Husky', 'https://images.unsplash.com/photo-1537151625747-768eb6cf92b2?auto=format&fit=crop&w=400&q=80', 3),
-  ('Classic Friendly Yellow Labrador', 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=400&q=80', 4),
-  ('Merle Coat Australian Shepherd', 'https://images.unsplash.com/photo-1503256207526-0d5d80fa2f47?auto=format&fit=crop&w=400&q=80', 5),
-  ('Bat-Eared Playful French Bulldog', 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=400&q=80', 6),
+  ('Noble Protective German Shepherd', 'https://images.unsplash.com/photo-1781715634838-8f124ccdc4b4?auto=format&fit=crop&w=400&q=80', 1),
+  ('Short-Legged Energetic Welsh Corgi', 'https://images.unsplash.com/photo-1546975490-a79abdd54533?auto=format&fit=crop&w=400&q=80', 2),
+  ('Vocal Blue-Eyed Siberian Husky', 'https://images.unsplash.com/photo-1605568427561-40dd23c2acea?auto=format&fit=crop&w=400&q=80', 3),
+  ('Classic Friendly Yellow Labrador', 'https://images.unsplash.com/photo-1537204696486-967f1b7198c8?auto=format&fit=crop&w=400&q=80', 4),
+  ('Merle Coat Australian Shepherd', 'https://images.unsplash.com/photo-1785679330069-5a342aa6e0a1?auto=format&fit=crop&w=400&q=80', 5),
+  ('Bat-Eared Playful French Bulldog', 'https://images.unsplash.com/photo-1598133894008-61f7fdb8cc3a?auto=format&fit=crop&w=400&q=80', 6),
   ('Giant White Fluffy Cloud Samoyed', 'https://images.unsplash.com/photo-1529429617124-95b109e86bb8?auto=format&fit=crop&w=400&q=80', 7),
   ('Ultra-Athletic Clever Border Collie', 'https://images.unsplash.com/photo-1503256207526-0d5d80fa2f47?auto=format&fit=crop&w=400&q=80', 8)
 ) AS opt(text, image_url, order_index);

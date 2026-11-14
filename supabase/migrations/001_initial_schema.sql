@@ -123,3 +123,4 @@ CREATE TABLE IF NOT EXISTS telemetry_events (
 );
 
 CREATE INDEX IF NOT EXISTS idx_telemetry_type ON telemetry_events(event_type, created_at);
+
