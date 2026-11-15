@@ -48,8 +48,6 @@ test('1200 complete randomized games: all roles, player counts, timeouts, redraw
     const scores=r.players.map(p=>p.score);tick(r,Date.now()+999999);assert.deepEqual(r.players.map(p=>p.score),scores);act(r,r.host,'next');continue;
    }
    if(r.practiceReady){const phase=r.phaseId;tick(r,Date.now()+999999);assert.equal(r.phaseId,phase);act(r,r.host,'continuePractice');continue;}
-   if(r.stage==='talk'){act(r,r.host,'skipTalk');continue;}
-   if(r.game==='packed'&&['question','tiers'].includes(r.stage)){tick(r,r.deadline+1);continue;}
    if(!practice&&run%5===1&&r.round%2===0){tick(r,r.deadline+1);continue;}
    for(const id of expected(r).filter(id=>!(id in r.actions))){
     if(r.game==='borrowed'&&r.stage==='clue'&&run%3===0&&!r.data.sets[r.data.givers.indexOf(id)].redrawn)act(r,id,'redraw');

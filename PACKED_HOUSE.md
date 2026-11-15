@@ -1,10 +1,10 @@
 # Packed House — implemented rules
 
-Packed House replaces Trust Issues and Last Seat in the six-game lounge. This implementation follows the supplied PH-1.0 rules, with the operational clarifications below. The supplied report's 3.7 million tests are external claims; our independently run checks are recorded in VERIFICATION.md.
+Packed House replaces Trust Issues and Last Seat in the six-game lounge. This implementation follows the supplied PH-1.0 rules, with the operational clarifications below. On 16 November 2026 the flow was simplified to **Rank → Discuss & choose → Reveal**, at the user's request. Scoring and hidden capacity rules are unchanged. The supplied report's 3.7 million tests are external claims; our independently run checks are recorded in VERIFICATION.md.
 
 ## Play
 
-Five to ten players join before the start; later arrivals and players beyond ten watch as spectators. Everyone privately ranks all five options (six for nine or ten players), then sees the resulting rooms. Discuss your plans in person or on a separate voice call, privately save a room, and reveal whether its entrants fit.
+Five to ten players join before the start; later arrivals and players beyond ten watch as spectators. Everyone privately ranks all five options (six for nine or ten players), then sees the resulting rooms with choices immediately enabled. Discuss your plans in person or on a separate voice call while saving or updating a room, and reveal whether its entrants fit.
 
 The latest valid saved ranking or pick before the phase closes counts. Moving an option or selecting a room is a draft until you press Save/Update. Live Rank and Pick always run their full timers, even when everyone has submitted. Practice waits for Continue demo at every step. Bots use only their filtered player view; they cannot inspect the capacity draw.
 
@@ -30,15 +30,15 @@ Highest total wins. Ties use more positive-scoring rounds, then fewer zero-scori
 ## Settings and pacing
 
 - 5–10 rounds, default 8; 6 is recommended for groups of 9–10.
-- Question 5 seconds; Rank 30; Tiers 5; Talk 45; Pick 20. Rank/Talk/Pick can each be 10–120 seconds.
-- The host can finish discussion early. Reveals wait for the host to continue, giving everyone time to inspect calculations and talk; there is no forced 25-second reveal timeout.
-- Twenty curated questions cover colours, food, sports, shows, activities and other preferences. Questions do not repeat within a game. Options are shuffled before ranking; five are used from each six-option curated set for smaller groups.
+- Rank 30 seconds; Discuss & choose 65 seconds. Each timer can be 10–120 seconds. The question appears above the ranking controls immediately. There are no separate Question, Tiers, or Talk phases.
+- Choices are open for the entire combined discussion timer. All saved choices remain editable until it ends. Reveals wait for the host to continue, giving everyone time to inspect calculations; there is no forced reveal timeout.
+- Sixty curated questions with photos cover colours, food, sports, shows, activities and other preferences. Questions do not repeat within a game. Options are shuffled before ranking; five are used from each six-option curated set for smaller groups.
 - Custom packs: 5 or 6 unique options per question, at least as many distinct questions as rounds, maximum 30 questions. All questions need 6 options for 9–10 players. Save the pack before starting.
 - Individual ballots appear at reveal by default. Anonymous mode shuffles ballots and removes identities; picks and payouts remain public. Anonymity does not prevent people inferring a ballot from its contents.
 
 ## Connection and submission behaviour
 
-The client sends a heartbeat every five seconds. After fifteen seconds without authenticated activity a player is marked Away. This grace period avoids penalising a momentary network interruption. Explicit Leave marks the seat away immediately. At Rank/Pick close, only connected seated players' valid submissions count; already-frozen rankings never change during Talk or Pick.
+The client sends a heartbeat every five seconds. After fifteen seconds without authenticated activity a player is marked Away. This grace period avoids penalising a momentary network interruption. Explicit Leave marks the seat away immediately. At Rank/Pick close, only connected seated players' valid submissions count; already-frozen rankings never change during Discuss & choose.
 
 An away player keeps their identity, score and original seat. Reload the same tab or use the **private seat link** in the game sidebar to reconnect from another device. That link signs in as the player and must stay private. An ordinary invite creates a spectator after the game starts. In the lounge spectators can take an available seat for the next game.
 

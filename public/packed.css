@@ -28,9 +28,8 @@
 .packed-room.picked{background:#eaf0d8;border-color:#7e9a55;box-shadow:0 4px 0 #9bb07b,0 0 0 3px rgba(126,154,85,0.25)}
 
 /* Room Media & Badges */
-.packed-room-media{position:relative;width:100%;height:130px;border-radius:12px;overflow:hidden;margin-bottom:12px;background:#e2e9d2;border:1px solid #d5dec2}
-.packed-room-img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s ease}
-.packed-room:not(:disabled):hover .packed-room-img{transform:scale(1.04)}
+.packed-room-media{position:relative;width:100%;aspect-ratio:4/3;border-radius:12px;overflow:hidden;margin-bottom:16px;background:#edf0e6;border:1px solid #d5dec2}
+.packed-room-img{width:100%;height:100%;object-fit:contain;display:block}
 .packed-tier-badge{position:absolute;top:9px;left:9px;padding:4px 9px;background:rgba(35,46,26,0.8);backdrop-filter:blur(4px);color:#f7f9ee;font-size:9px;font-weight:700;letter-spacing:1.5px;border-radius:12px;border:1px solid rgba(255,255,255,0.2)}
 .packed-room-header-plain{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .packed-tier{font-size:9px;letter-spacing:1.8px;color:#7e925c;font-weight:700}
@@ -43,8 +42,8 @@
 
 /* Room Content Info */
 .packed-room-info{display:flex;flex-direction:column;gap:8px;flex:1}
-.packed-room-title{font-size:16px;line-height:1.3;letter-spacing:-.2px;color:#28351e;overflow-wrap:anywhere}
-.packed-room-stats{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding-top:6px}
+.packed-room-title{font-size:19px;line-height:1.4;letter-spacing:-.2px;color:#28351e;overflow-wrap:anywhere}
+.packed-room-stats{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:auto;padding-top:6px}
 .packed-pool{font-size:24px;line-height:1;color:#456034;font-weight:800;display:flex;align-items:baseline;gap:5px}
 .packed-pool small{font-size:8px;letter-spacing:1px;font-weight:600;color:#70845a}
 .packed-capacity{font-size:11px;padding:4px 8px;background:#ffffffcc;border:1px solid #d5dec2;border-radius:12px;color:#4e633a;font-weight:600;white-space:nowrap}
@@ -55,8 +54,8 @@
 .packed-rank .rank-item:hover{border-color:#a5ba85;background:#fcfdf7}
 .packed-rank .rank-item.is-dragging{opacity:.5;border-style:dashed}
 .packed-rank .rank-item.drag-target{outline:2.5px dashed #7a9751;outline-offset:2px}
-.rank-thumb-wrap{width:48px;height:48px;border-radius:10px;overflow:hidden;flex-shrink:0;background:#e5ebd7;border:1px solid #d5dec2;box-shadow:0 2px 4px rgba(0,0,0,0.06)}
-.rank-thumb-img{width:100%;height:100%;object-fit:cover;display:block}
+.packed-rank .rank-thumb-wrap{width:160px;height:120px;border-radius:10px;overflow:hidden;flex-shrink:0;background:#edf0e6;border:1px solid #d5dec2}
+.packed-rank .rank-thumb-img{width:100%;height:100%;object-fit:contain;display:block}
 .rank-label{flex:1;min-width:0;font-size:14px;line-height:1.35;font-weight:600;color:#2c3a21;overflow-wrap:anywhere}
 .rank-drag-handle{font-size:20px;color:#8f9e77;padding:4px 6px;cursor:grab;user-select:none;touch-action:none;display:grid;place-items:center;border-radius:6px}
 .rank-drag-handle:hover{background:#edf2df;color:#5a6e42}
@@ -85,8 +84,8 @@
 .packed-results{display:grid;gap:14px;margin:25px 0}
 .packed-result{padding:20px;border:1.5px solid #dce4ce;border-radius:18px;background:#f7f9f0;animation:lone-reveal .5s both;animation-delay:var(--reveal-delay);box-shadow:0 3px 0 #d9e1cb}
 .packed-result header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
-.result-thumb-wrap{width:46px;height:46px;border-radius:10px;overflow:hidden;flex-shrink:0;border:1px solid #d2dbc0;box-shadow:0 2px 4px rgba(0,0,0,0.06);background:#e4ebd5}
-.result-thumb-img{width:100%;height:100%;object-fit:cover;display:block}
+.result-thumb-wrap{width:120px;height:90px;border-radius:10px;overflow:hidden;flex-shrink:0;border:1px solid #d2dbc0;background:#edf0e6}
+.result-thumb-img{width:100%;height:100%;object-fit:contain;display:block}
 .result-header-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .result-header-text span{font-size:9px;letter-spacing:1.2px;color:#788b62;font-weight:700}
 .result-header-text strong{font-size:17px;color:#29371d;overflow-wrap:anywhere;line-height:1.25}
@@ -110,7 +109,7 @@
 .packed-ballots th{font-weight:700;color:#677b52}
 .packed-ballot-list>div{border-bottom:1px solid #e1e6d4;padding-bottom:10px;margin-bottom:10px}
 
-.packed-timer-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.packed-timer-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .packed-timer-options input{width:100%;padding:10px;margin:8px 0}
 .game-options textarea{font:inherit;line-height:1.6;width:100%;padding:12px;border-radius:10px;border:1.5px solid #d5dec2;resize:vertical}
 
@@ -124,7 +123,6 @@ select option{background-color:#ffffff;color:#2c3a21;padding:10px 12px;font-size
 @media(max-width:768px){
   .packed-rooms{grid-template-columns:1fr;gap:14px}
   .packed-room{padding:14px;min-height:auto}
-  .packed-room-media{height:140px}
   .packed-room-title{font-size:16px}
   .packed-pool{font-size:22px}
   .packed-preview{grid-template-columns:repeat(auto-fit,minmax(min(100%,130px),1fr));gap:10px}
@@ -134,14 +132,12 @@ select option{background-color:#ffffff;color:#2c3a21;padding:10px 12px;font-size
 @media(max-width:540px){
   .packed-preview{grid-template-columns:repeat(2,1fr);gap:10px}
   .packed-rank .rank-item{gap:8px;padding:8px 10px}
-  .rank-thumb-wrap{width:42px;height:42px}
   .rank-label{font-size:13px}
   .rank-value{display:none}
   .rank-controls button{width:28px;height:28px;font-size:12px}
   .packed-timer-options{grid-template-columns:1fr}
   .packed-submit .btn{width:100%}
   .packed-result{padding:14px}
-  .result-thumb-wrap{width:38px;height:38px}
   .result-header-text strong{font-size:15px}
   .packed-result header>b{font-size:17px}
   .packed-seats span{width:24px;height:30px}
@@ -150,15 +146,81 @@ select option{background-color:#ffffff;color:#2c3a21;padding:10px 12px;font-size
 /* Landscape Mode on Phones */
 @media(max-height:500px) and (orientation:landscape){
   .packed-rooms{grid-template-columns:repeat(2,1fr);gap:10px}
-  .packed-room-media{height:85px}
   .packed-room{padding:10px}
   .packed-room-title{font-size:14px}
   .packed-preview{grid-template-columns:repeat(3,1fr);gap:8px}
   .preview-media{aspect-ratio:16/9}
-  .rank-thumb-wrap{width:36px;height:36px}
 }
 
 @media(prefers-reduced-motion:reduce){
   .packed-result,.packed-preview-card{animation:none!important}
   .preview-img,.packed-room-img{transition:none!important}
+}
+
+/* Keep the complete photo visible, including portrait and panoramic sources. */
+.packed-rank .rank-label{font-size:16px;line-height:1.45;white-space:normal;overflow:visible;text-overflow:clip}
+.packed-rank .rank-value{display:none}
+.packed-rank .rank-controls button{width:44px;height:44px;font-size:18px}
+.packed-rank .rank-drag-handle{min-width:32px;min-height:44px}
+.packed-room-header-plain:empty{display:none}
+.packed-image-fallback{display:grid;place-items:center;padding:16px;text-align:center;color:#687657;font-size:13px}
+@media(max-width:1000px){
+ .packed-rank .rank-item{display:grid;grid-template-columns:32px 28px minmax(0,1fr);gap:10px;padding:14px}
+ .packed-rank .rank-thumb-wrap{grid-column:1/-1;grid-row:1;width:100%;height:auto;aspect-ratio:4/3}
+ .packed-rank .rank-drag-handle,.packed-rank .rank-position{grid-row:2}
+ .packed-rank .rank-label{grid-row:2;grid-column:3}
+ .packed-rank .rank-controls{grid-column:1/-1;justify-content:flex-end}
+ .packed-result header{flex-wrap:wrap}
+ .result-thumb-wrap{width:100%;height:auto;aspect-ratio:4/3}
+ .packed-room-title{font-size:18px}
+}
+
+/* Custom Select Dropdowns for Packed House Theme */
+.play-panel.green .custom-select-trigger,
+.lounge-picker .custom-select-trigger,
+.game-options .custom-select-trigger {
+  border-color: #d2dbc0;
+  box-shadow: 0 2px 6px rgba(44, 58, 33, 0.06);
+  color: #2c3a21;
+}
+.play-panel.green .custom-select-trigger:hover,
+.lounge-picker .custom-select-trigger:hover,
+.game-options .custom-select-trigger:hover {
+  border-color: #8da56b;
+  background: #f7f9f0;
+}
+.play-panel.green .custom-select.is-open .custom-select-trigger,
+.lounge-picker .custom-select.is-open .custom-select-trigger,
+.game-options .custom-select.is-open .custom-select-trigger {
+  border-color: #637f44;
+  box-shadow: 0 0 0 3px rgba(99, 127, 68, 0.22);
+}
+.play-panel.green .custom-select-arrow svg,
+.lounge-picker .custom-select-arrow svg,
+.game-options .custom-select-arrow svg {
+  stroke: #5a703d;
+}
+.play-panel.green .custom-select-menu,
+.lounge-picker .custom-select-menu,
+.game-options .custom-select-menu {
+  border-color: #c7d4b2;
+  box-shadow: 0 14px 36px rgba(44, 58, 33, 0.16), 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+.play-panel.green .custom-select-option:hover,
+.lounge-picker .custom-select-option:hover,
+.game-options .custom-select-option:hover {
+  background: #edf3e3;
+  color: #28371c;
+}
+.play-panel.green .custom-select-option.selected,
+.lounge-picker .custom-select-option.selected,
+.game-options .custom-select-option.selected {
+  background: #e3ebd4;
+  color: #28371c;
+  font-weight: 700;
+}
+.play-panel.green .select-check,
+.lounge-picker .select-check,
+.game-options .select-check {
+  color: #4b662d;
 }

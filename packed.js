@@ -5,7 +5,7 @@ const insist=(ok,message)=>{if(!ok)throw new Error(message);};
 const shuffle=a=>{const b=[...a];for(let i=b.length-1;i>0;i--){const j=randomInt(i+1);[b[i],b[j]]=[b[j],b[i]];}return b;};
 export function validatePackedOptions(o){
  insist(Number.isInteger(o.packedRounds)&&o.packedRounds>=5&&o.packedRounds<=10,'Choose 5–10 rounds.');
- for(const key of ['packedRankSeconds','packedTalkSeconds','packedPickSeconds'])insist(Number.isInteger(o[key])&&o[key]>=10&&o[key]<=120,'Choose timers from 10 to 120 seconds.');
+ for(const key of ['packedRankSeconds','packedPickSeconds'])insist(Number.isInteger(o[key])&&o[key]>=10&&o[key]<=120,'Choose timers from 10 to 120 seconds.');
  insist(typeof o.packedAnonymous==='boolean'&&typeof o.packedSoftLanding==='boolean','Choose valid house rules.');
  insist(['curated','custom'].includes(o.packedPack),'Choose a curated or custom pack.');
  insist(Array.isArray(o.packedCustom)&&o.packedCustom.length<=30,'Use at most 30 custom questions.');
@@ -32,7 +32,7 @@ export function initPacked(r){
 export function nextPacked(r,stage){
  const caps=packedTemplates[r.seatedCount],k=caps.length,[question,options]=r.packedQuestions[r.round-1],board=shuffle(options).slice(0,k);
  const proof={roundId:randomUUID(),version:'PH-1.0',seatedCount:r.seatedCount,capacities:caps.map(max=>randomInt(1,max+1)),tieOrder:shuffle(board.map((_,i)=>i)),nonce:randomBytes(32).toString('hex')};
- r.data={question,board,proof,commitment:createHash('sha256').update(proofText(proof)).digest('hex'),rankings:{},picks:{},tiers:[],receipts:{}};stage(r,'question',5);if(r.practice)r.practiceReady=true;
+ r.data={question,board,proof,commitment:createHash('sha256').update(proofText(proof)).digest('hex'),rankings:{},picks:{},tiers:[],receipts:{}};stage(r,'rank',r.options.packedRankSeconds);
 }
 export function expectedPacked(r){return ['rank','pick'].includes(r.stage)?r.players.filter(p=>p.connected!==false).map(p=>p.id):[];}
 export function packedAction(r,id,action,value,{touch,stage,advance},requestId){
@@ -40,7 +40,6 @@ export function packedAction(r,id,action,value,{touch,stage,advance},requestId){
  if(action==='endPacked'){insist(id===r.host&&r.paused,'Only the host can end a paused game.');endPacked(r,stage,'The host ended the paused game.');return;}
  insist(!r.paused,'The game is paused while players reconnect.');
  insist(!r.deadline||Date.now()<r.deadline,'Time is up. Wait for the next phase.');
- if(action==='skipTalk'){insist(id===r.host&&r.stage==='talk','Only the host can finish discussion.');advance(r);return;}
  insist(action==='submit'&&['rank','pick'].includes(r.stage),'Submit only during Rank or Pick.');insist(expectedPacked(r).includes(id),'Only connected seated players can submit.');
  const k=r.data.board.length;
  if(r.stage==='rank')insist(Array.isArray(value)&&value.length===k&&new Set(value).size===k&&value.every(i=>Number.isInteger(i)&&i>=0&&i<k),'Rank every option exactly once.');
@@ -51,12 +50,9 @@ export function packedAction(r,id,action,value,{touch,stage,advance},requestId){
 }
 export function advancePacked(r,{stage,reveal}){
  const d=r.data;
- if(r.stage==='question'){r.actions={};stage(r,'rank',r.options.packedRankSeconds);return;}
  if(r.stage==='rank'){
-  d.rankings=Object.fromEntries(expectedPacked(r).filter(id=>id in r.actions).map(id=>[id,[...r.actions[id]]]));d.tiers=aggregateRankings(d.board.map((_,i)=>i),Object.values(d.rankings),d.proof.tieOrder).map((s,i)=>({...s,tier:i+1,pool:packedPools[i],range:[1,packedTemplates[r.seatedCount][i]]}));r.actions={};stage(r,'tiers',5);if(r.practice)r.practiceReady=true;return;
+  d.rankings=Object.fromEntries(expectedPacked(r).filter(id=>id in r.actions).map(id=>[id,[...r.actions[id]]]));d.tiers=aggregateRankings(d.board.map((_,i)=>i),Object.values(d.rankings),d.proof.tieOrder).map((s,i)=>({...s,tier:i+1,pool:packedPools[i],range:[1,packedTemplates[r.seatedCount][i]]}));r.actions={};stage(r,'pick',r.options.packedPickSeconds);return;
  }
- if(r.stage==='tiers'){stage(r,'talk',r.options.packedTalkSeconds);if(r.practice)r.practiceReady=true;return;}
- if(r.stage==='talk'){r.actions={};stage(r,'pick',r.options.packedPickSeconds);return;}
  if(r.stage==='pick'){d.picks=Object.fromEntries(expectedPacked(r).filter(id=>id in r.actions).map(id=>[id,r.actions[id]]));reveal(r);}
 }
 export function scorePacked(r){

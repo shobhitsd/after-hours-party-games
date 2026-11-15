@@ -39,7 +39,7 @@ try{
  let duplicates=0;
  for(let round=1;round<=5;round++){
   await Promise.all(rooms.map(async room=>{
-   expire(room.host);room.state=(await call('state',undefined,room.host)).state;assert.equal(room.state.stage,'rank');const ranking=room.state.board.map((_,i)=>i);
+   room.state=(await call('state',undefined,room.host)).state;assert.equal(room.state.stage,'rank');const ranking=room.state.board.map((_,i)=>i);
    await Promise.all(room.people.map(async auth=>{
     const old={...payload(room.state,'submit',ranking),requestId:`rank-${round}-initial`};
     await Promise.all([call('action',old,auth),call('action',old,auth)]);duplicates++;
@@ -47,8 +47,7 @@ try{
     // A delayed retry of the earlier request must not undo the later save.
     const retry=(await call('action',old,auth)).state;assert.deepEqual(retry.ownAnswer,[...ranking].reverse());duplicates++;
    }));
-   expire(room.host);expire(room.host);room.state=(await call('state',undefined,room.host)).state;assert.equal(room.state.stage,'talk');
-   room.state=(await call('action',payload(room.state,'skipTalk'),room.host)).state;
+   expire(room.host);room.state=(await call('state',undefined,room.host)).state;assert.equal(room.state.stage,'pick');
    await call('action',payload(room.state,'submit',0),room.spectator,400);
    await Promise.all(room.people.map(async(auth,i)=>{
     await call('action',payload(room.state,'submit',i%6),auth);

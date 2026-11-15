@@ -1622,7 +1622,7 @@ export const loneQuestions = [
    },
    {
     "text": "Giant Fluffy Bernese Mountain Pup",
-    "image": "https://images.unsplash.com/photo-1781715634838-8f124ccdc4b4?auto=format&fit=crop&w=400&q=80"
+    "image": "https://images.unsplash.com/photo-1513350660342-816d92510adf?auto=format&fit=crop&w=400&q=80"
    },
    {
     "text": "Ultra-Smart Tri-Color Border Collie",
@@ -2639,11 +2639,11 @@ export const loneQuestions = [
    },
    {
     "text": "Short-Legged Energetic Welsh Corgi",
-    "image": "https://images.unsplash.com/photo-1546975490-a79abdd54533?auto=format&fit=crop&w=400&q=80"
+    "image": "https://images.unsplash.com/photo-1560743641-3914f2c45636?auto=format&fit=crop&w=400&q=80"
    },
    {
     "text": "Vocal Blue-Eyed Siberian Husky",
-    "image": "https://images.unsplash.com/photo-1605568427561-40dd23c2acea?auto=format&fit=crop&w=400&q=80"
+    "image": "https://images.unsplash.com/photo-1568572933382-74d440642117?auto=format&fit=crop&w=400&q=80"
    },
    {
     "text": "Classic Friendly Yellow Labrador",

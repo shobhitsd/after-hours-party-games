@@ -177,7 +177,7 @@ export async function handleRequest(req,res){
        data=await readFile(path.join(process.cwd(),file));
      } catch {
        if(url.pathname==='/'||url.pathname==='/index.html') data=fallbackIndexHtml;
-       else if(url.pathname==='/favicon.svg') data=fallbackFaviconSvg;
+       else if(url.pathname==='/favicon.svg'||url.pathname==='/favicon.ico') data=fallbackFaviconSvg;
        else {
          res.writeHead(404,{'Content-Type':'text/plain'});return res.end('Not found');
        }

@@ -795,7 +795,7 @@ FROM ins_s, (VALUES
   ('Gentle Senior Golden Retriever', 'https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=400&q=80', 1),
   ('Big Affectionate Orange Tabby Cat', 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=400&q=80', 2),
   ('Floppy-Eared Sleepy Basset Hound', 'https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?auto=format&fit=crop&w=400&q=80', 3),
-  ('Giant Fluffy Bernese Mountain Pup', 'https://images.unsplash.com/photo-1781715634838-8f124ccdc4b4?auto=format&fit=crop&w=400&q=80', 4),
+  ('Giant Fluffy Bernese Mountain Pup', 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=400&q=80', 4),
   ('Ultra-Smart Tri-Color Border Collie', 'https://images.unsplash.com/photo-1503256207526-0d5d80fa2f47?auto=format&fit=crop&w=400&q=80', 5),
   ('Tiny Playful Calico Kitten', 'https://images.unsplash.com/photo-1573865526739-10659fec78a5?auto=format&fit=crop&w=400&q=80', 6),
   ('Gentle Sniffing Rescue Beagle', 'https://images.unsplash.com/photo-1505628346881-b72b27e84530?auto=format&fit=crop&w=400&q=80', 7),
@@ -1291,12 +1291,12 @@ WITH ins_s AS (
 INSERT INTO scenario_options (scenario_id, text, image_url, order_index)
 SELECT ins_s.id, opt.text, opt.image_url, opt.order_index
 FROM ins_s, (VALUES
-  ('Eternally Smiling Golden Retriever', 'https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=400&q=80', 0),
-  ('Noble Protective German Shepherd', 'https://images.unsplash.com/photo-1781715634838-8f124ccdc4b4?auto=format&fit=crop&w=400&q=80', 1),
-  ('Short-Legged Energetic Welsh Corgi', 'https://images.unsplash.com/photo-1546975490-a79abdd54533?auto=format&fit=crop&w=400&q=80', 2),
-  ('Vocal Blue-Eyed Siberian Husky', 'https://images.unsplash.com/photo-1605568427561-40dd23c2acea?auto=format&fit=crop&w=400&q=80', 3),
+  ('Eternally Smiling Golden Retriever', 'https://images.unsplash.com/photo-1511732351157-1865efcb7b7b?auto=format&fit=crop&w=400&q=80', 0),
+  ('Noble Protective German Shepherd', 'https://images.unsplash.com/photo-1513350660342-816d92510adf?auto=format&fit=crop&w=400&q=80', 1),
+  ('Short-Legged Energetic Welsh Corgi', 'https://images.unsplash.com/photo-1560743641-3914f2c45636?auto=format&fit=crop&w=400&q=80', 2),
+  ('Vocal Blue-Eyed Siberian Husky', 'https://images.unsplash.com/photo-1568572933382-74d440642117?auto=format&fit=crop&w=400&q=80', 3),
   ('Classic Friendly Yellow Labrador', 'https://images.unsplash.com/photo-1537204696486-967f1b7198c8?auto=format&fit=crop&w=400&q=80', 4),
-  ('Merle Coat Australian Shepherd', 'https://images.unsplash.com/photo-1785679330069-5a342aa6e0a1?auto=format&fit=crop&w=400&q=80', 5),
+  ('Merle Coat Australian Shepherd', 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?auto=format&fit=crop&w=400&q=80', 5),
   ('Bat-Eared Playful French Bulldog', 'https://images.unsplash.com/photo-1598133894008-61f7fdb8cc3a?auto=format&fit=crop&w=400&q=80', 6),
   ('Giant White Fluffy Cloud Samoyed', 'https://images.unsplash.com/photo-1529429617124-95b109e86bb8?auto=format&fit=crop&w=400&q=80', 7),
   ('Ultra-Athletic Clever Border Collie', 'https://images.unsplash.com/photo-1503256207526-0d5d80fa2f47?auto=format&fit=crop&w=400&q=80', 8)

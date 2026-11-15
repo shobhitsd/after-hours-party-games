@@ -3,9 +3,40 @@ import {verifyProof} from './packed-proof.js';
 const optText = o => (typeof o === 'object' && o !== null ? o.text || o.label || '' : String(o || ''));
 const optImg = o => (typeof o === 'object' && o !== null ? o.image || '' : '');
 
+document.addEventListener('error',event=>{
+ const img=event.target;
+ if(!(img instanceof HTMLImageElement)||!img.matches('.packed-room-img, .packed-rank .rank-thumb-img, .packed-results .result-thumb-img'))return;
+ const frame=img.parentElement;
+ frame.style.removeProperty('display');
+ frame.classList.add('packed-image-fallback');
+ const note=document.createElement('span');note.textContent='Photo unavailable';
+ frame.replaceChildren(note);
+},true);
+
 export function packedOptions(o,disabled,esc){
- const select=(key,label,values)=>`<label for="option-${key}">${label}</label><select id="option-${key}" data-option="${key}" ${disabled?'disabled':''}>${values.map(([v,t])=>`<option value="${v}" ${String(o[key])===String(v)?'selected':''}>${t}</option>`).join('')}</select>`;
- return `<div class="game-options" data-key="game-options"><h3>Make room for your people</h3>${select('packedRounds','Rounds',[5,6,7,8,9,10].map(n=>[n,`${n} rounds${n===6?' · recommended for 9–10 people':''}`]))}<div class="packed-timer-options">${[['packedRankSeconds','Rank'],['packedTalkSeconds','Talk'],['packedPickSeconds','Pick']].map(([key,label])=>`<label>${label} (seconds)<input type="number" data-option="${key}" min="10" max="120" value="${o[key]}" ${disabled?'disabled':''}></label>`).join('')}</div>${select('packedAnonymous','Rankings at reveal',[[false,'Show who ranked what'],[true,'Anonymous ballots']])}${select('packedSoftLanding','Overcrowding rule',[[false,'Classic · overcrowded rooms score 0'],[true,'Soft Landing · exactly one over earns 1 each']])}<p>Soft Landing is an optional house rule. It does not change the seats or pool splits.</p>${select('packedPack','Question pack',[['curated','Curated · 60 verified questions with photos'],['custom','Your private questions']])}${o.packedPack==='custom'?`<label for="packed-custom">One question per line: Question | Option 1 | Option 2 | …</label><textarea id="packed-custom" rows="6" maxlength="15000" ${disabled?'disabled':''} placeholder="Best holiday? | Beach | Mountains | City | Cruise | Desert | Countryside">${esc(o.packedCustom.map(q=>[q.question,...q.options].join(' | ')).join('\n'))}</textarea><p>Save at least ${o.packedRounds} questions. Use 5 options per question, or 6 for groups of 9–10. Each option must be distinct.</p><button class="btn outline" data-action="save-packed-custom" ${disabled?'disabled':''}>Save questions</button><small>${o.packedCustom.length} saved questions</small>`:''}<p>Five to ten seated players. Extra friends can watch. Practice waits for you at each step.</p></div>`;
+ const select=(key,label,values)=>{
+  const currentEntry=values.find(([v])=>String(v)===String(o[key]))||values[0];
+  const currentText=currentEntry?currentEntry[1]:'';
+  return `<label for="option-${key}">${label}</label>
+  <div class="custom-select ${disabled?'disabled':''}">
+   <select id="option-${key}" data-option="${key}" class="custom-select-native" tabindex="-1" aria-hidden="true" ${disabled?'disabled':''}>
+    ${values.map(([v,t])=>`<option value="${v}" ${String(o[key])===String(v)?'selected':''}>${esc(t)}</option>`).join('')}
+   </select>
+   <button type="button" class="custom-select-trigger" data-toggle-dropdown aria-haspopup="listbox" aria-expanded="false" ${disabled?'disabled':''}>
+    <span class="custom-select-label"><span class="select-text">${esc(currentText)}</span></span>
+    <span class="custom-select-arrow" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
+   </button>
+   <div class="custom-select-menu" role="listbox">
+    ${values.map(([v,t])=>{
+      const sel=String(o[key])===String(v);
+      return `<div class="custom-select-option ${sel?'selected':''}" role="option" data-select-dropdown="option-${key}" data-value="${v}" aria-selected="${sel}">
+       <span class="select-option-text">${esc(t)}</span>${sel?'<span class="select-check" aria-hidden="true">✓</span>':''}
+      </div>`;
+    }).join('')}
+   </div>
+  </div>`;
+ };
+ return `<div class="game-options" data-key="game-options"><h3>Make room for your people</h3>${select('packedRounds','Rounds',[5,6,7,8,9,10].map(n=>[n,`${n} rounds${n===6?' · recommended for 9–10 people':''}`]))}<div class="packed-timer-options">${[['packedRankSeconds','Rank'],['packedPickSeconds','Discuss & choose']].map(([key,label])=>`<label>${label} (seconds)<input type="number" data-option="${key}" min="10" max="120" value="${o[key]}" ${disabled?'disabled':''}></label>`).join('')}</div>${select('packedAnonymous','Rankings at reveal',[[false,'Show who ranked what'],[true,'Anonymous ballots']])}${select('packedSoftLanding','Overcrowding rule',[[false,'Classic · overcrowded rooms score 0'],[true,'Soft Landing · exactly one over earns 1 each']])}<p>Soft Landing is an optional house rule. It does not change the seats or pool splits.</p>${select('packedPack','Question pack',[['curated','Curated · 60 verified questions with photos'],['custom','Your private questions']])}${o.packedPack==='custom'?`<label for="packed-custom">One question per line: Question | Option 1 | Option 2 | …</label><textarea id="packed-custom" rows="6" maxlength="15000" ${disabled?'disabled':''} placeholder="Best holiday? | Beach | Mountains | City | Cruise | Desert | Countryside">${esc(o.packedCustom.map(q=>[q.question,...q.options].join(' | ')).join('\n'))}</textarea><p>Save at least ${o.packedRounds} questions. Use 5 options per question, or 6 for groups of 9–10. Each option must be distinct.</p><button class="btn outline" data-action="save-packed-custom" ${disabled?'disabled':''}>Save questions</button><small>${o.packedCustom.length} saved questions</small>`:''}<p>Five to ten seated players. Extra friends can watch. Practice waits for you at each step.</p></div>`;
 }
 
 export function packedContent(s,{esc,intro,button,nameOf},selected){
@@ -20,16 +51,9 @@ export function packedContent(s,{esc,intro,button,nameOf},selected){
   return `<button class="packed-room tier-${t.tier} ${selected[0]===t.id&&choosing?'picked':''}" data-choice="${t.id}" aria-pressed="${choosing&&selected[0]===t.id}" ${!choosing||!s.canAct?'disabled':''} data-key="packed-room-${t.id}">
    ${img?`
     <div class="packed-room-media">
-     <img src="${esc(img)}" alt="${esc(opt)}" class="packed-room-img" loading="lazy" />
-     <span class="packed-tier-badge">TIER ${t.tier}</span>
-     <span class="room-door" aria-hidden="true"><i></i><i></i><i></i></span>
+     <img src="${esc(img)}" alt="${esc(opt)}" class="packed-room-img" loading="lazy" draggable="false" />
     </div>
-   `:`
-    <div class="packed-room-header-plain">
-     <span class="packed-tier">TIER ${t.tier}</span>
-     <span class="room-door" aria-hidden="true"><i></i><i></i><i></i></span>
-    </div>
-   `}
+   `:''}
    <div class="packed-room-info">
     <strong class="packed-room-title">${esc(opt)}</strong>
     <div class="packed-room-stats">
@@ -43,21 +67,13 @@ export function packedContent(s,{esc,intro,button,nameOf},selected){
 
  const saved=s.ownAnswer!==undefined;
 
- if(s.stage==='question')return top+intro(esc(s.question),'What do you like most? Everyone will rank these options. Your shared preferences build the rooms.')+`<div class="packed-preview">${s.board.map((opt,i)=>{
-  const img=optImg(opt);
-  return `<div class="packed-preview-card" style="--order:${i}">
-   ${img?`<div class="preview-media"><img src="${esc(img)}" alt="${esc(opt)}" class="preview-img" loading="lazy" /></div>`:`<span>${['✦','◈','✿','☀','❖','✧'][i]}</span>`}
-   <strong class="preview-label">${esc(opt)}</strong>
-  </div>`;
- }).join('')}</div>`+proof;
-
- if(s.stage==='rank')return top+intro(esc(s.question),spectator?'The seated players are ranking. You will see the combined rooms next.':'Drag the grip or use the arrows to order every option, favourite first. Save your ranking; you can change it until this phase closes.')+(spectator?'<div class="waiting-box">Watching the room take shape…</div>':`<ol class="rank-list packed-rank" aria-label="Your private ranking">${selected.map((id,pos)=>{
+ if(s.stage==='rank')return top+intro(esc(s.question),spectator?'The seated players are ranking. You will see the combined rooms next.':'Drag the grip or use the arrows to order every option, favourite first. Lock in your ranking below. You can update it until this step closes.')+(spectator?'<div class="waiting-box">Watching the room take shape…</div>':`<ol class="rank-list packed-rank" aria-label="Your private ranking">${selected.map((id,pos)=>{
   const opt=s.board[id];
   const img=optImg(opt);
   return `<li class="rank-item" data-key="packed-rank-${id}" data-rank-pos="${pos}" draggable="${s.canAct}">
    <span class="rank-drag-handle" aria-hidden="true" title="Drag to reorder">⠿</span>
    <span class="rank-position">${pos+1}</span>
-   ${img?`<div class="rank-thumb-wrap"><img src="${esc(img)}" alt="${esc(opt)}" class="rank-thumb-img" loading="lazy" /></div>`:''}
+   ${img?`<div class="rank-thumb-wrap"><img src="${esc(img)}" alt="${esc(opt)}" class="rank-thumb-img" loading="lazy" draggable="false" /></div>`:''}
    <strong class="rank-label">${esc(opt)}</strong>
    <span class="rank-value">${s.board.length-pos}<small>Borda pts</small></span>
    <div class="rank-controls">
@@ -65,13 +81,9 @@ export function packedContent(s,{esc,intro,button,nameOf},selected){
     <button data-rank-move="${pos}" data-direction="1" aria-label="Move ${esc(opt)} down" ${!s.canAct||pos===selected.length-1?'disabled':''}>↓</button>
    </div>
   </li>`;
- }).join('')}</ol><div class="packed-submit">${button(saved?'Update ranking →':'Save ranking →','lock-rank','primary',s.canAct?'':'disabled')}<p aria-live="polite">${saved?'Ranking saved. Your latest saved order counts.':'Nothing submitted yet.'} ${s.submitted.length}/${s.expectedCount} rankings saved.</p></div>`)+proof;
+ }).join('')}</ol><div class="packed-submit">${button(saved?'Update ranking →':'Lock in ranking →','lock-rank','primary',s.canAct?'':'disabled')}<p aria-live="polite">${saved?'Ranking saved. Your latest saved order counts.':'Nothing submitted yet.'} ${s.submitted.length}/${s.expectedCount} rankings saved.</p></div>`)+proof;
 
- if(s.stage==='tiers')return top+intro('You built these rooms.',`Your combined rankings decided this order. The pools are fixed by tier; ${s.options.packedAnonymous?'anonymous':'individual'} ballots appear after picks.`)+roomCards()+proof;
-
- if(s.stage==='talk')return top+intro(esc(s.question),'Talk in person or on your voice call. Make pacts, question promises, and decide which room might stay quiet.')+roomCards()+`<div class="packed-explainer"><strong>One person gets the whole pool.</strong><p>Two or more split it if they fit. More people than seats? Everyone there gets ${s.options.packedSoftLanding?'0, except exactly one over earns 1 each':'0'}. The range shows possible seat counts. Even one person can enter.</p></div>`+(s.host===s.me?button('Everyone ready? Open picks →','skipTalk','outline'):'')+proof;
-
- return top+intro(esc(s.question),spectator?'Watch the room choose. Individual picks stay secret until the reveal.':'Choose your room. The latest pick you save before the timer ends counts.')+roomCards(true)+(!spectator?`<div class="packed-submit">${button(saved?'Update my room →':'Save my room →','lock','primary',s.canAct&&selected.length?'':'disabled')}<p aria-live="polite">${saved?`Saved: ${esc(s.board[s.ownAnswer])}. You can still change it.`:'No pick yet. Missing this phase scores 0 and takes no seat.'}</p></div>`:'')+proof;
+ return top+intro(esc(s.question),spectator?'Watch the room choose. Individual picks stay secret until the reveal.':'Discuss your plans in person or on your voice call, and choose a room while you talk. Save your choice now; you can update it until the timer ends.')+roomCards(true)+`<div class="packed-explainer"><strong>One person gets the whole pool.</strong><p>If everyone fits, split the pool. Too many people? ${s.options.packedSoftLanding?'Exactly one over earns 1 each; otherwise everyone scores 0.':'Everyone there scores 0.'} The range shows possible seat counts.</p></div>`+(!spectator?`<div class="packed-submit">${button(saved?'Update my room →':'Lock in my room →','lock','primary',s.canAct&&selected.length?'':'disabled')}<p aria-live="polite">${saved?`Saved: ${esc(s.board[s.ownAnswer])}. You can still change it.`:'No pick yet. Missing this phase scores 0 and takes no seat.'}</p></div>`:'')+proof;
 }
 
 export function observePackedCommitment(s){
@@ -89,9 +101,8 @@ export function packedReveal(s,{esc,nameOf}){
   const img=optImg(t.label);
   return `<article class="packed-result ${t.status}" style="--reveal-delay:${i*.18}s">
    <header>
-    ${img?`<div class="result-thumb-wrap"><img src="${esc(img)}" alt="${esc(t.label)}" class="result-thumb-img" loading="lazy" /></div>`:''}
+    ${img?`<div class="result-thumb-wrap"><img src="${esc(img)}" alt="${esc(t.label)}" class="result-thumb-img" loading="lazy" draggable="false" /></div>`:''}
     <div class="result-header-text">
-     <span>TIER ${t.tier}</span>
      <strong>${esc(t.label)}</strong>
     </div>
     <b>${t.pool} pts</b>

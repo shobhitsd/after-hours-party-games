@@ -1,5 +1,16 @@
 # Gameplay fixes and verification
 
+## Three-step flow and complete option photos — 16 November 2026
+
+- Packed House now runs **Rank → Discuss & choose → Reveal**. The question appears immediately above the ranking controls. Rank closes directly into a combined discussion/selection phase, with choices enabled from the start and editable until its deadline. Default timers are 30 and 65 seconds; both are configurable. Separate Question, Tiers and Talk screens and the obsolete Skip Talk action were removed. Practice and live play follow the same three steps.
+- Removed visible tier labels from choice cards and reveals. Pools and hidden-seat calculations retain their existing rules.
+- Choice photos use roomy 4:3 frames with `object-fit: contain`, preserving the entire source image. Removed image zoom and decorative overlays. Ranking and reveal pictures are larger, with full-width images on narrower layouts, wrapping labels, and 44-pixel ranking buttons. Native image dragging is disabled so ranking gestures move the option. A failed image keeps a visible fallback and the playable label.
+- **51 engine tests passed**, including the exact three-step sequence, open choices during discussion, unchanged commitments across phases, invalid old Skip Talk actions, 1,200 all-game simulations and 1,000 dedicated Packed House simulations.
+- **Nine Packed House browser scenarios passed across the main run and focused drag rerun.** The main run passed eight; the enlarged-row drag check initially began during scrolling. The focused check brings the list into view before dragging, and passes desktop drag, touch movement, and cancellation. Chrome, Firefox and WebKit interaction checks passed. Twelve viewport sizes include phones, tablet portrait/landscape and desktop.
+- New image tests use known portrait and panoramic fixtures to verify whole-image fitting, no hover zoom, readable labels, no horizontal overflow, no tier badges, and usable failed-image fallbacks. A separate check on the running local demo loaded all five actual choice photos, verified their contain sizing and zero horizontal overflow, and captured `test-results/packed-real-rank-desktop.png`, `packed-real-choices-desktop.png`, and `packed-real-choice-phone.png`. Real-photo screenshots were inspected visually.
+- Live ten-player browser/API checks passed with six options, the shortened phase sequence, full timers, spectators, host migration, pause and early finish. The adapted local HTTP/SSE load test passed **20 rooms, 200 players, 20 spectators, 100 rounds, 7,845 requests and 3,000 idempotent retries** (maximum 32 in-flight HTTP requests; controlled phase deadlines). See `test-results/load-report.json` for measured timings and scope.
+- The local server was restarted and the three-step demo verified at **http://localhost:3000**. No public deployment was performed. Prior exhaustive scoring results below remain historical; scoring formulas were unchanged in this update.
+
 ## Packed House replacement — 14 November 2026
 
 Packed House replaces Trust Issues and Last Seat in both the game catalog and running engine. The other five games remain. Rules, tables and operational choices: [PACKED_HOUSE.md](PACKED_HOUSE.md). Historical results below describe earlier versions, not the current game.

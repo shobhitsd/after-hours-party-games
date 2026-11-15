@@ -18,8 +18,6 @@ function answer(r,id){const d=r.data;
  }
 }
 function completeRound(r){for(let guard=0;r.stage!=='reveal'&&guard<10;guard++){
- if(r.stage==='talk'){act(r,r.host,'skipTalk');continue;}
- if(r.game==='packed'&&['question','tiers'].includes(r.stage)){tick(r,r.deadline+1);continue;}
  const phase=r.stage;for(const id of expected(r)){assert.equal(r.stage,phase);act(r,id,'submit',answer(r,id));}
  if(r.game==='packed'&&['rank','pick'].includes(r.stage))tick(r,r.deadline+1);
  }assert.equal(r.stage,'reveal');}
@@ -87,7 +85,6 @@ test('practice bots complete all games with the human participating',()=>{
   const {room:r,host}=createRoom('PRACT','Human',true);startGame(r,host.id,game);
   for(let i=0;i<20&&r.stage!=='reveal';i++){
    if(r.practiceReady){act(r,host.id,'continuePractice');continue;}
-   if(r.stage==='talk'){act(r,host.id,'skipTalk');continue;}
    if(expected(r).includes(host.id)&&!(host.id in r.actions))act(r,host.id,'submit',answer(r,host.id));
    tick(r,r.since+2000);
   }assert.equal(r.stage,'reveal',game);

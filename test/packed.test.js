@@ -10,8 +10,17 @@ const clone=x=>structuredClone(x);
 const permutation=k=>Array.from({length:k},(_,i)=>i).sort(()=>Math.random()-.5);
 function setup(n=6,options={},practice=false){const {room:r,host}=createRoom('PACKD','Host',practice);configureRoom(r,host.id,'packed',options);if(!practice)for(let i=1;i<n;i++)joinRoom(r,'Player '+i);startGame(r,host.id,'packed');return r;}
 function advance(r){if(r.practice)act(r,r.host,'continuePractice');else tick(r,r.deadline+1);}
-function ranked(r){advance(r);for(const id of expected(r))act(r,id,'submit',r.data.board.map((_,i)=>i));advance(r);}
-function picking(r){ranked(r);advance(r);act(r,r.host,'skipTalk');}
+function ranked(r){for(const id of expected(r))act(r,id,'submit',r.data.board.map((_,i)=>i));advance(r);}
+function picking(r){ranked(r);}
+
+test('Packed House has exactly three steps with choices open throughout discussion',()=>{
+ const r=setup();assert.equal(r.stage,'rank');assert.ok(r.deadline-r.since===30000);assert.ok(verifyProof(r.data.proof,r.data.commitment));
+ const commitment=r.data.commitment;for(const p of r.players)act(r,p.id,'submit',[0,1,2,3,4]);assert.equal(r.stage,'rank');
+ advance(r);assert.equal(r.stage,'pick');assert.equal(r.deadline-r.since,65000);assert.equal(r.data.commitment,commitment);
+ for(const p of r.players)act(r,p.id,'submit',0);assert.equal(r.stage,'pick');act(r,r.host,'submit',1);assert.equal(r.actions[r.host],1);
+ assert.throws(()=>act(r,r.host,'skipTalk'));assert.equal(r.stage,'pick');advance(r);assert.equal(r.stage,'reveal');assert.equal(r.history.length,1);
+ act(r,r.host,'next');assert.equal(r.stage,'rank');assert.notEqual(r.data.commitment,commitment);
+});
 
 test('Packed House replaces both old titles and validates exact templates and averages',()=>{
  assert.equal(Object.keys(games).length,6);assert.equal(games.lone,undefined);assert.equal(games.seat,undefined);assert.equal(games.packed.max,10);
@@ -38,9 +47,9 @@ test('Packed House portable SHA-256 matches Node; valid proofs and edited fields
  }
 });
 test('Packed House last valid rank/pick wins, identical retries are harmless, invalid replacements preserve state',()=>{
- const r=setup();advance(r);const id=r.host,k=r.data.board.length,a=permutation(k),b=[...a].reverse();act(r,id,'submit',a,'request-one');act(r,id,'submit',b,'request-two');const revision=r.revision;act(r,id,'submit',a,'request-one');assert.equal(r.revision,revision);assert.deepEqual(r.actions[id],b);
+ const r=setup();const id=r.host,k=r.data.board.length,a=permutation(k),b=[...a].reverse();act(r,id,'submit',a,'request-one');act(r,id,'submit',b,'request-two');const revision=r.revision;act(r,id,'submit',a,'request-one');assert.equal(r.revision,revision);assert.deepEqual(r.actions[id],b);
  for(const bad of [null,[],[0,0,1,2,3],[0,1,2,3,99],'0,1,2,3,4']){assert.throws(()=>act(r,id,'submit',bad));assert.deepEqual(r.actions[id],b);}
- act(r,id,'submit',a);advance(r);advance(r);act(r,r.host,'skipTalk');act(r,id,'submit',0);act(r,id,'submit',1);assert.equal(r.actions[id],1);assert.throws(()=>act(r,id,'submit',99));assert.equal(r.actions[id],1);
+ act(r,id,'submit',a);advance(r);act(r,id,'submit',0);act(r,id,'submit',1);assert.equal(r.actions[id],1);assert.throws(()=>act(r,id,'submit',99));assert.equal(r.actions[id],1);
  r.deadline=Date.now()-1;assert.throws(()=>act(r,id,'submit',2),/Time is up/);assert.equal(r.actions[id],1);
 });
 test('Packed House privacy in every pre-reveal phase includes spectators and duplicate views',()=>{
@@ -68,10 +77,10 @@ test('Packed House all legal per-room splits lose only the three documented rema
 });
 test('Packed House away rules: no seat for an away pick, fixed template, reconnect restores eligibility',()=>{
  const r=setup(7);picking(r);const p=r.players[1];act(r,p.id,'submit',0);setPresence(r,p.id,false);assert.equal(view(r,p.id).canAct,false);assert.equal(r.seatedCount,7);assert.equal(r.data.proof.capacities.length,5);advance(r);assert.equal(r.result.points[p.id],0);assert.equal(r.result.rows.find(x=>x.id===p.id).answer,'No pick');
- act(r,r.host,'next');advance(r);setPresence(r,p.id,true);act(r,p.id,'submit',[0,1,2,3,4]);assert.ok(r.actions[p.id]);
+ act(r,r.host,'next');setPresence(r,p.id,true);act(r,p.id,'submit',[0,1,2,3,4]);assert.ok(r.actions[p.id]);
 });
 test('Packed House quorum pause freezes timer, resumes remaining time, and times out without scoring an unfinished round',()=>{
- const r=setup(6);advance(r);const original=r.deadline,now=Date.now();for(const p of r.players.slice(3))setPresence(r,p.id,false,now);assert.ok(r.paused);assert.equal(r.deadline,null);assert.throws(()=>act(r,r.host,'submit',[0,1,2,3,4]),/paused/);
+ const r=setup(6);const original=r.deadline,now=Date.now();for(const p of r.players.slice(3))setPresence(r,p.id,false,now);assert.ok(r.paused);assert.equal(r.deadline,null);assert.throws(()=>act(r,r.host,'submit',[0,1,2,3,4]),/paused/);
  setPresence(r,r.players[3].id,true,now+10000);assert.equal(r.paused,null);assert.equal(r.deadline,original+10000);
  setPresence(r,r.players[3].id,false,now+10001);tick(r,now+130002);assert.equal(r.status,'finished');assert.equal(r.history.length,0);assert.ok(r.players.every(p=>p.score===0));assert.match(r.endedEarly,/two minutes/);
 });
@@ -86,7 +95,7 @@ test('Packed House anonymous ballots have no identity; scoring-round ties and sh
 test('Packed House custom packs and settings validate before any game state is changed',()=>{
  const {room:r,host}=createRoom('PACKD','Host',true);configureRoom(r,host.id,'packed',{packedPack:'custom'});const snapshot=JSON.stringify(r);assert.throws(()=>startGame(r,host.id,'packed'),/different custom question/);assert.equal(JSON.stringify(r),snapshot);
  const custom=Array.from({length:5},(_,i)=>({question:'Question '+i,options:['A','B','C','D','E','F']}));configureRoom(r,host.id,'packed',{packedRounds:5,packedPack:'custom',packedCustom:custom});startGame(r,host.id,'packed');assert.equal(r.total,5);
- for(const opts of [{packedRounds:4},{packedRankSeconds:9},{packedTalkSeconds:121},{packedPickSeconds:'20'},{packedAnonymous:'true'},{packedSoftLanding:1},{packedPack:'__proto__'},{packedCustom:[{question:'Bad',options:['A','A','B','C','D']}]}]){const q=createRoom('CHECK','Host').room;const before=JSON.stringify(q);assert.throws(()=>configureRoom(q,q.host,'packed',opts));assert.equal(JSON.stringify(q),before);}
+ for(const opts of [{packedRounds:4},{packedRankSeconds:9},{packedPickSeconds:121},{packedPickSeconds:'20'},{packedAnonymous:'true'},{packedSoftLanding:1},{packedPack:'__proto__'},{packedCustom:[{question:'Bad',options:['A','A','B','C','D']}]}]){const q=createRoom('CHECK','Host').room;const before=JSON.stringify(q);assert.throws(()=>configureRoom(q,q.host,'packed',opts));assert.equal(JSON.stringify(q),before);}
 });
 test('Packed House 1000 full games with skipped/replaced submissions, away players and integer scoring',t=>{
  let rounds=0;for(let run=0;run<1000;run++){const r=setup(5+run%6,{packedRounds:5+run%6,packedAnonymous:run%2===0,packedSoftLanding:run%3===0});let guard=0;const totals=Object.fromEntries(r.players.map(p=>[p.id,0]));
