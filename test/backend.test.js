@@ -5,7 +5,8 @@ import {createRoomStore,CAS_SCRIPT} from '../lib/redis.js';
 import {createDatabase} from '../lib/supabase.js';
 import {createBilling} from '../lib/billing.js';
 import {packedQuestions} from '../packed-content.js';
-import hosted from '../api/index.js';
+import {fetchHandler} from '../api/index.js';
+const hosted={fetch:fetchHandler};
 const response=data=>new Response(JSON.stringify(data),{status:200,headers:{'Content-Type':'application/json'}});
 const cloudEnv={SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_test',SUPABASE_SECRET_KEY:'sb_secret_test'};
 

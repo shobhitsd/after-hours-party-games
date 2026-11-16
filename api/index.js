@@ -9,9 +9,7 @@ export default async function handler(req, res) {
   // 1. Standard Vercel Node.js runtime (req: IncomingMessage, res: ServerResponse)
   if (res && typeof res.writeHead === 'function') {
     try {
-      if (req.headers && req.headers['x-matched-path']) {
-        req.url = req.headers['x-matched-path'];
-      }
+      req.serverless = true;
       return await handleRequest(req, res);
     } catch (err) {
       console.error('Vercel Serverless Function Error:', err);
@@ -26,10 +24,10 @@ export default async function handler(req, res) {
   }
 
   // 2. Web Standard / Edge / Test Fetch API invocation
-  return handler.fetch(req);
+  return fetchHandler(req);
 }
 
-handler.fetch = async function fetch(request) {
+export async function fetchHandler(request) {
   try {
     const req = request.body ? Readable.fromWeb(request.body) : Readable.from([]);
     req.method = request.method;

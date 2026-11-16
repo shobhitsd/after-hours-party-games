@@ -12,6 +12,7 @@ import {createRoomStore} from './lib/redis.js';
 import {createBilling} from './lib/billing.js';
 import {handleCloudPost} from './lib/cloud-routes.js';
 import {evaluateGameAccess} from './lib/permissions.js';
+import {resolvePublicOrigin} from './lib/origin.js';
 
 export const rooms=new Map(), streams=new Map(), limits=new Map();
 export const roomStore=createRoomStore({rooms});
@@ -40,7 +41,7 @@ async function archive(room){
  if(archiveJobs.size>1000)for(const [key,until]of archiveJobs)if(until<Date.now())archiveJobs.delete(key);
 }
 const port=Number(process.env.PORT||3000);
-const publicOrigin=process.env.PUBLIC_ORIGIN?new URL(process.env.PUBLIC_ORIGIN).origin:process.env.VERCEL_URL?`https://${process.env.VERCEL_URL}`:null;
+const publicOrigin=resolvePublicOrigin();
 const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const code=()=>Array.from({length:5},()=>alphabet[randomInt(alphabet.length)]).join('');
 export function broadcast(room){room.updated=Date.now();for(const s of streams.get(room.code)||[]){try{s.res.write(`data: ${JSON.stringify(view(room,s.id))}\n\n`);}catch{}}}
@@ -95,8 +96,6 @@ export async function handleRequest(req,res){
    if(url.searchParams.has('__route')){
      const route=url.searchParams.get('__route');
      url=new URL(route.startsWith('/')?route:'/api/'+route,'http://localhost');
-   } else if(req.headers&&req.headers['x-matched-path']){
-     url=new URL(req.headers['x-matched-path'],'http://localhost');
    }
    if(req.method==='GET'&&(url.pathname==='/api/health'||url.pathname==='/api/ping'))return json(res,{application:'after-hours-party-games',version:'1.0.0'});
    if(req.method==='GET'&&url.pathname==='/api/games')return json(res,games);
