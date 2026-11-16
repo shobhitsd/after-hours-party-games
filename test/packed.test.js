@@ -13,6 +13,19 @@ function advance(r){if(r.practice)act(r,r.host,'continuePractice');else tick(r,r
 function ranked(r){for(const id of expected(r))act(r,id,'submit',r.data.board.map((_,i)=>i));advance(r);}
 function picking(r){ranked(r);}
 
+test('Three question changes are shared, host-only, ranking-only, reset each round and clear all drafts',()=>{
+ const r=setup(),seen=new Set([r.data.question]);
+ assert.throws(()=>act(r,r.players[1].id,'changeQuestion'),/host/);
+ for(let i=0;i<3;i++){for(const p of r.players)act(r,p.id,'submit',[0,1,2,3,4]);const old={round:r.round,phase:r.phaseId,hash:r.data.commitment,scores:r.players.map(p=>p.score)};act(r,r.host,'changeQuestion');assert.equal(r.round,old.round);assert.ok(r.phaseId>old.phase);assert.notEqual(r.data.commitment,old.hash);assert.deepEqual(r.players.map(p=>p.score),old.scores);assert.deepEqual(r.actions,{});assert.ok(!seen.has(r.data.question));seen.add(r.data.question);assert.equal(view(r,r.host).questionChangesLeft,2-i);}
+ assert.throws(()=>act(r,r.host,'changeQuestion'),/three/);ranked(r);assert.throws(()=>act(r,r.host,'changeQuestion'),/ranking/);advance(r);act(r,r.host,'next');assert.equal(view(r,r.host).questionChangesLeft,3);
+ r.deadline=Date.now()-1;assert.throws(()=>act(r,r.host,'changeQuestion'),/Time is up/);
+});
+
+test('Question changes refill a small custom deck without repeats within a round, including practice',()=>{
+ const custom=Array.from({length:5},(_,i)=>({question:'Custom '+i,options:['A','B','C','D','E','F']}));
+ for(const practice of [false,true]){const r=setup(6,{packedRounds:5,packedPack:'custom',packedCustom:custom},practice);for(let round=1;round<=5;round++){const seen=new Set([r.data.question]);for(let i=0;i<3;i++){act(r,r.host,'changeQuestion');assert.equal(r.practiceReady,false);assert.ok(!seen.has(r.data.question));seen.add(r.data.question);}for(const id of expected(r))act(r,id,'submit',[0,1,2,3,4]);advance(r);for(const id of expected(r))act(r,id,'submit',0);advance(r);act(r,r.host,'next');}assert.equal(r.status,'finished');}
+});
+
 test('Packed House has exactly three steps with choices open throughout discussion',()=>{
  const r=setup();assert.equal(r.stage,'rank');assert.ok(r.deadline-r.since===30000);assert.ok(verifyProof(r.data.proof,r.data.commitment));
  const commitment=r.data.commitment;for(const p of r.players)act(r,p.id,'submit',[0,1,2,3,4]);assert.equal(r.stage,'rank');

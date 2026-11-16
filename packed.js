@@ -25,14 +25,19 @@ export function roomPayout(pool,capacity,count,soft=false){
 export function packedStandings(r){return [...r.players].sort((a,b)=>b.score-a.score||r.packedStats[b.id].scored-r.packedStats[a.id].scored||r.packedStats[a.id].zero-r.packedStats[b.id].zero);}
 export function initPacked(r){
  const k=r.players.length>=9?6:5;
- const questions=r.options.packedPack==='custom'?r.options.packedCustom.map(q=>[q.question.trim(),q.options.map(x=>x.trim())]):packedQuestions;
+ const questions=r.options.packedPack==='custom'?r.options.packedCustom.map(q=>[q.question.trim(),q.options.map(x=>x.trim())]):r.contentQuestions||packedQuestions;
  insist(questions.length>=r.options.packedRounds,'Add at least one different custom question per round.');insist(questions.every(q=>q[1].length>=k),`Each question needs ${k} options for this group.`);
- r.total=r.options.packedRounds;r.seatedCount=r.players.length;r.packedQuestions=shuffle(questions);r.packedStats=Object.fromEntries(r.players.map(p=>[p.id,{scored:0,zero:0}]));r.paused=null;r.endedEarly=null;
+ r.total=r.options.packedRounds;r.seatedCount=r.players.length;r.packedQuestions=shuffle(questions);r.packedBag=r.packedQuestions.map((_,i)=>i);delete r.contentQuestions;r.packedStats=Object.fromEntries(r.players.map(p=>[p.id,{scored:0,zero:0}]));r.paused=null;r.endedEarly=null;
 }
-export function nextPacked(r,stage){
- const caps=packedTemplates[r.seatedCount],k=caps.length,[question,options]=r.packedQuestions[r.round-1],board=shuffle(options).slice(0,k);
+export function nextPacked(r,stage,changing=false){
+ if(!changing){r.packedSkips=0;r.packedRoundSeen=[];}
+ let index=r.packedBag.findIndex(i=>!r.packedRoundSeen.includes(r.packedQuestions[i][0]));
+ if(index<0){r.packedBag=shuffle(r.packedQuestions.map((_,i)=>i).filter(i=>!r.packedRoundSeen.includes(r.packedQuestions[i][0])));index=0;}
+ insist(r.packedBag.length,'No different questions are available.');
+ const [question,options]=r.packedQuestions[r.packedBag.splice(index,1)[0]];r.packedRoundSeen.push(question);
+ const caps=packedTemplates[r.seatedCount],k=caps.length,board=shuffle(options).slice(0,k);
  const proof={roundId:randomUUID(),version:'PH-1.0',seatedCount:r.seatedCount,capacities:caps.map(max=>randomInt(1,max+1)),tieOrder:shuffle(board.map((_,i)=>i)),nonce:randomBytes(32).toString('hex')};
- r.data={question,board,proof,commitment:createHash('sha256').update(proofText(proof)).digest('hex'),rankings:{},picks:{},tiers:[],receipts:{}};stage(r,'rank',r.options.packedRankSeconds);
+ r.actions={};r.data={question,board,proof,commitment:createHash('sha256').update(proofText(proof)).digest('hex'),rankings:{},picks:{},tiers:[],receipts:{}};stage(r,'rank',r.options.packedRankSeconds);
 }
 export function expectedPacked(r){return ['rank','pick'].includes(r.stage)?r.players.filter(p=>p.connected!==false).map(p=>p.id):[];}
 export function packedAction(r,id,action,value,{touch,stage,advance},requestId){
@@ -40,6 +45,12 @@ export function packedAction(r,id,action,value,{touch,stage,advance},requestId){
  if(action==='endPacked'){insist(id===r.host&&r.paused,'Only the host can end a paused game.');endPacked(r,stage,'The host ended the paused game.');return;}
  insist(!r.paused,'The game is paused while players reconnect.');
  insist(!r.deadline||Date.now()<r.deadline,'Time is up. Wait for the next phase.');
+ if(action==='changeQuestion'){
+  insist(id===r.host,'Only the host can change the question for the group.');
+  insist(r.stage==='rank','Questions can only change during ranking.');
+  insist(r.packedSkips<3,'All three question changes have been used this round.');
+  r.packedSkips++;nextPacked(r,stage,true);return;
+ }
  insist(action==='submit'&&['rank','pick'].includes(r.stage),'Submit only during Rank or Pick.');insist(expectedPacked(r).includes(id),'Only connected seated players can submit.');
  const k=r.data.board.length;
  if(r.stage==='rank')insist(Array.isArray(value)&&value.length===k&&new Set(value).size===k&&value.every(i=>Number.isInteger(i)&&i>=0&&i<k),'Rank every option exactly once.');
@@ -75,5 +86,5 @@ export function packedPresence(r,{touch,stage},now=Date.now()){
 export function packedView(r,id){
  const d=r.data,rank=r.stage==='rank',picker=r.stage==='pick',spectator=!r.players.some(p=>p.id===id);
  const sorted=packedStandings(r),best=sorted[0],winners=sorted.filter(p=>p.score===best.score&&r.packedStats[p.id].scored===r.packedStats[best.id].scored&&r.packedStats[p.id].zero===r.packedStats[best.id].zero).map(p=>p.id);
- return {role:spectator?'Spectator':'Room seeker',spectator,question:d.question,board:d.board,roundId:d.proof.roundId,commitment:d.commitment,seatedCount:r.seatedCount,paused:r.paused?{until:r.paused.until}:null,endedEarly:r.endedEarly,canAct:!spectator&&!r.paused&&r.status==='playing'&&(rank||picker)&&r.players.find(p=>p.id===id)?.connected!==false,ownRanking:d.rankings[id],tiers:d.tiers.map(({total,first,last,...t})=>t),stats:r.packedStats,standings:sorted.map(p=>p.id),winners};
+ return {role:spectator?'Spectator':'Room seeker',spectator,questionChangesLeft:3-r.packedSkips,question:d.question,board:d.board,roundId:d.proof.roundId,commitment:d.commitment,seatedCount:r.seatedCount,paused:r.paused?{until:r.paused.until}:null,endedEarly:r.endedEarly,canAct:!spectator&&!r.paused&&r.status==='playing'&&(rank||picker)&&r.players.find(p=>p.id===id)?.connected!==false,ownRanking:d.rankings[id],tiers:d.tiers.map(({total,first,last,...t})=>t),stats:r.packedStats,standings:sorted.map(p=>p.id),winners};
 }

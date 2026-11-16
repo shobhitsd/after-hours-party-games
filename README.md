@@ -16,7 +16,7 @@ Six real-time party games for 4–10 friends (depending on the game), featuring 
 
 | Game | Players | Category | How It Works |
 | :--- | :--- | :--- | :--- |
-| **Packed House** | 5–10 | Collective bluffing | Everyone ranks, negotiates and chooses a room. Rankings set tier pools; hidden seats decide whether entrants split the pool or score zero. 20 varied questions, custom packs, practice bots, spectators and verified reveals. |
+| **Packed House** | 5–10 | Collective bluffing | Everyone ranks, negotiates and chooses a room. Rankings set tier pools; hidden seats decide whether entrants split the pool or score zero. 60 varied questions, custom packs, practice bots, spectators and verified reveals. |
 | **Signal Bridge** *(formerly Crossed Signals)* | 4–8 | Word association | One sender gives a single clue for different secret targets on everyone's 6-, 9-, or 12-card boards. 24 association groups; five rotating rounds. |
 | **Decoy Department** | 5–8 | Creative sabotage | A target and seven related alternatives, then two secret saboteurs add decoys. Twelve authored sets; every player gets one turn as guide. |
 | **Crowd Control** | 4–8 | Social prediction | Calibrate a dilemma threshold with a blank to hit a secret target number of YES votes. Includes 40 prompt templates. |
@@ -27,14 +27,14 @@ Six real-time party games for 4–10 friends (depending on the game), featuring 
 
 ## Deployment & Hosting
 
-### Vercel adapter (not sufficient for live rooms)
+### Cloud integration and hosting
 
-The repository includes a Vercel adapter for the existing website. **Packed House and the other live games currently require one persistent Node process:** room state, presence timers and event streams live in memory. A serverless deployment alone does not provide reliable multiplayer rooms. Use the always-on deployment below; supporting multiple instances requires shared room state and event distribution. The adapter setup below is retained for frontend work, not verified multiplayer hosting.
+The server supports shared Upstash room storage, Supabase accounts/content/private packs/history, and verified Razorpay subscriptions. These integrations are prepared and locally tested; cloud accounts have not been connected or deployed. Follow [BACKEND_INTEGRATION.md](BACKEND_INTEGRATION.md) for the migration, environment settings, seeding, hosting and staging checks.
 
 1. Push your repository to GitHub.
 2. In [Vercel](https://vercel.com): **Add New Project** → **Import** your repository.
-3. Leave Build and Output settings as default (Framework Preset: **Other**).
-4. Click **Deploy** to publish the frontend/adapter. Connect it to a persistent game backend before inviting remote players.
+3. Choose Framework Preset **Other**, build command `npm run build`, output directory `public`, and Node 24. Configure Upstash before deploying multiplayer; Supabase and Razorpay enable the optional account features.
+4. Deploy a staging site, set its `PUBLIC_ORIGIN`, and complete the staging checks in the integration guide before sharing it publicly. Shared storage uses short HTTP polling rather than long-lived serverless event streams.
 
 ### Deploy to Render / Docker / VM (Always-On Node.js)
 

@@ -66,8 +66,9 @@ export function packedContent(s,{esc,intro,button,nameOf},selected){
  }).join('')}</div>`;
 
  const saved=s.ownAnswer!==undefined;
+ const changes=`<div class="packed-change-question"><p>Not a question for your group? ${s.questionChangesLeft} of 3 changes left this round. Changing it clears everyone's rankings.</p>${s.host===s.me?button('Change question','confirm-change-question','outline',s.questionChangesLeft>0?'':'disabled'):'<small>Your host can change it during ranking.</small>'}</div>`;
 
- if(s.stage==='rank')return top+intro(esc(s.question),spectator?'The seated players are ranking. You will see the combined rooms next.':'Drag the grip or use the arrows to order every option, favourite first. Lock in your ranking below. You can update it until this step closes.')+(spectator?'<div class="waiting-box">Watching the room take shape…</div>':`<ol class="rank-list packed-rank" aria-label="Your private ranking">${selected.map((id,pos)=>{
+ if(s.stage==='rank')return top+intro(esc(s.question),spectator?'The seated players are ranking. You will see the combined rooms next.':'Drag the grip or use the arrows to order every option, favourite first. Lock in your ranking below. You can update it until this step closes.')+changes+(spectator?'<div class="waiting-box">Watching the room take shape…</div>':`<ol class="rank-list packed-rank" aria-label="Your private ranking">${selected.map((id,pos)=>{
   const opt=s.board[id];
   const img=optImg(opt);
   return `<li class="rank-item" data-key="packed-rank-${id}" data-rank-pos="${pos}" draggable="${s.canAct}">

@@ -7,7 +7,10 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "build": "node -e \"console.log('After Hours: Vercel ready')\"",
+    "build": "node --check server.js && node --check public/app.js && node --check public/account-ui.js",
+    "check:backend": "node scripts/check-backend.mjs",
+    "seed:sql": "node scripts/seed-supabase.js --sql",
+    "test:backend": "node --test test/backend.test.js test/database.test.js",
     "test": "node --test test/*.test.js",
     "test:ui": "playwright test",
     "test:load": "node test/load.mjs",
@@ -18,6 +21,7 @@
     "node": ">=20"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.16",
     "@playwright/test": "^1.65.0"
   }
 }

@@ -52,7 +52,8 @@ export function startGame(room,id,game,options=room.options){
   insist(room.players.length>=g.min&&room.players.length<=g.max,`${g.name} needs ${g.min}–${g.max} players.`);
   if(['twins','borrowed'].includes(game)) insist(room.players.length%2===0,'This game needs an even number of players.');
   const nextOptions=validateOptions(options);
-  if(game==='packed'){const probe={players:room.players,options:nextOptions};initPacked(probe);}
+  if(game==='packed'){const probe={players:room.players,options:nextOptions,contentQuestions:room.contentQuestions};initPacked(probe);}
+  room.gameId=randomUUID();
   room.options=nextOptions;room.selectedGame=game;room.game=game;room.status='playing';room.paused=null;room.round=0;room.total=g.rounds||room.players.length;room.players.forEach(p=>p.score=0);room.history=[];room.seed=randomInt(10000);
   room.deck=shuffle(Array.from({length:game==='crowd'?prompts.length:game==='twins'?pairSets.length:associations.length},(_,i)=>i));
   if(game==='packed')initPacked(room);
@@ -137,7 +138,7 @@ function advance(r){
 }
 function reveal(r){
   const d=r.data,a=r.actions,points=Object.fromEntries(r.players.map(p=>[p.id,0]));let rows=[],headline='',detail='';
-  if(r.game==='packed'){r.result=scorePacked(r);r.players.forEach(p=>p.score+=r.result.points[p.id]);r.history.push(r.result);stage(r,'reveal',0);return;}
+  if(r.game==='packed'){r.result=scorePacked(r);r.result.commitment=r.data.commitment;r.players.forEach(p=>p.score+=r.result.points[p.id]);r.history.push(r.result);stage(r,'reveal',0);return;}
   if(r.game==='signals'){
     rows=Object.entries(d.boards).map(([id,b])=>({id,answer:b.cards[a[id]]||'No answer',target:b.cards[b.target],correct:a[id]===b.target}));const count=rows.filter(x=>x.correct).length;const total=count+(count===rows.length?2:0);r.players.forEach(p=>points[p.id]=total);headline=count===rows.length?'Perfect connection!':`${count} of ${rows.length} signals connected`;detail=`“${d.clue}” earned the group ${total} points${count===rows.length?' — including a 2-point bonus':''}.`;
   }else if(r.game==='decoy'){

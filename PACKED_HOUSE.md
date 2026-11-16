@@ -32,7 +32,8 @@ Highest total wins. Ties use more positive-scoring rounds, then fewer zero-scori
 - 5–10 rounds, default 8; 6 is recommended for groups of 9–10.
 - Rank 30 seconds; Discuss & choose 65 seconds. Each timer can be 10–120 seconds. The question appears above the ranking controls immediately. There are no separate Question, Tiers, or Talk phases.
 - Choices are open for the entire combined discussion timer. All saved choices remain editable until it ends. Reveals wait for the host to continue, giving everyone time to inspect calculations; there is no forced reveal timeout.
-- Sixty curated questions with photos cover colours, food, sports, shows, activities and other preferences. Questions do not repeat within a game. Options are shuffled before ranking; five are used from each six-option curated set for smaller groups.
+- The host can change the question **up to three times per round**, shared by the whole group, during ranking only. Confirmation clears everyone's saved rankings, restarts the ranking timer, and creates a fresh hidden draw and commitment. The round number and scores stay the same. The allowance resets next round; reloads and duplicate tabs do not reset it.
+- Sixty curated questions with photos cover colours, food, sports, shows, activities and other preferences. Unused questions are drawn first. Small custom decks refill when exhausted, but never show the same question twice within one round's four possible questions. Options are shuffled before ranking; five are used from each six-option curated set for smaller groups.
 - Custom packs: 5 or 6 unique options per question, at least as many distinct questions as rounds, maximum 30 questions. All questions need 6 options for 9–10 players. Save the pack before starting.
 - Individual ballots appear at reveal by default. Anonymous mode shuffles ballots and removes identities; picks and payouts remain public. Anonymity does not prevent people inferring a ballot from its contents.
 
@@ -60,6 +61,6 @@ Only the commitment is exposed before reveal. The browser remembers the first co
 
 `packed.js` owns aggregation, scoring, phases, settings, presence and filtered views. `packed-content.js` owns templates and curated questions. `public/packed-ui.js`, `public/packed.css` and `public/packed-proof.js` supply the interface and verification. Existing engine/server/client integration retains the other five games.
 
-Double-click **START GAMES.cmd** or run `npm start`, then open http://localhost:3000. The game currently needs a persistent Node process. Rooms and scores are in memory and do not survive a server restart; no online deployment or durable persistence is included in this change. Public hosting must use the persistent backend described in README.md.
+Double-click **START GAMES.cmd** or run `npm start`, then open http://localhost:3000. Standalone local rooms remain in memory. With Upstash configured, rooms survive application restarts and are shared across instances, with a two-hour inactivity TTL. Optional Supabase archives retain completed round receipts. Cloud configuration and verification are described in [BACKEND_INTEGRATION.md](BACKEND_INTEGRATION.md).
 
 Run `npm test`, `npm run test:ui`, `npm run test:exhaustive`, and `npm run test:load`. Playwright uses port 3100; load checks use 3101 and control phase deadlines to run quickly. Run exhaustive/load checks after Playwright, which clears test-results at startup. Human sessions are still needed to assess fun, perceived fairness and the frequency of zero scores.

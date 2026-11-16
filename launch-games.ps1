@@ -69,7 +69,9 @@ try {
         if (-not $taskPort) { throw 'Ports 3000-3010 are busy. Close an unused local server and try again.' }
         New-Item -ItemType Directory -Path $taskRuntime -Force | Out-Null
         $env:PORT = [string]$taskPort
-        $taskChild = Start-Process -FilePath $taskNodePath -ArgumentList ('"' + $taskServerPath + '"') -WorkingDirectory $PSScriptRoot -WindowStyle Hidden -RedirectStandardOutput $taskLog -RedirectStandardError $taskErrorLog -PassThru
+        $taskNodeArgs = '"' + $taskServerPath + '"'
+        if (Test-Path -LiteralPath (Join-Path $PSScriptRoot '.env')) { $taskNodeArgs = '--env-file=.env ' + $taskNodeArgs }
+        $taskChild = Start-Process -FilePath $taskNodePath -ArgumentList $taskNodeArgs -WorkingDirectory $PSScriptRoot -WindowStyle Hidden -RedirectStandardOutput $taskLog -RedirectStandardError $taskErrorLog -PassThru
         $taskReady = $false
         for ($taskAttempt = 0; $taskAttempt -lt 30; $taskAttempt++) {
             if ($taskChild.HasExited) { throw ('The game server exited. ' + (Get-Content -LiteralPath $taskErrorLog -Raw)) }

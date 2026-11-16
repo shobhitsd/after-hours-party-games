@@ -224,3 +224,13 @@ select option{background-color:#ffffff;color:#2c3a21;padding:10px 12px;font-size
 .game-options .select-check {
   color: #4b662d;
 }
+.packed-change-question{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px;border:1px solid #dedfcb;border-radius:16px;margin:20px 0;background:#f7f7ef;flex-wrap:wrap}
+.packed-change-question p{flex:1 1 220px;margin:0;font-size:14px;line-height:1.6}
+.packed-change-question .btn{white-space:normal}
+.account-packs{display:grid;gap:12px;margin:20px 0}
+.account-packs article{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px;border:1px solid #dedfcb;border-radius:12px}
+.account-packs strong{overflow-wrap:anywhere;flex:1 1 150px}
+#checkout-link{margin:16px 0}
+.header .account-access{display:inline-flex;align-items:center;min-height:44px}
+@media(max-width:600px){.header:has(.account-access){flex-wrap:wrap}.header:has(.account-access) nav{flex-basis:100%;justify-content:space-between;gap:12px}}
+@media(max-width:480px){.packed-change-question .btn{width:100%}.header nav{flex-wrap:wrap;justify-content:flex-end}.account-packs .btn{flex:1}}
