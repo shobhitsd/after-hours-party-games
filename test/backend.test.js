@@ -38,6 +38,8 @@ test('Supabase validates content, separates VIP cache, expires membership and ne
  const db=createDatabase({env:cloudEnv,fetchImpl,now:()=>now});
  assert.equal((await db.verifyUser('valid-token-1234567890')).id,'verified');await assert.rejects(db.verifyUser('fake'),e=>e.status===401);
  assert.equal(await db.checkHostSubscription('host'),true);const before=calls;assert.equal(await db.checkHostSubscription('host'),true);assert.equal(calls,before);now+=11000;assert.equal(await db.checkHostSubscription('host'),false);
+ const hostEnt=await db.getHostEntitlements('host');assert.equal(typeof hostEnt,'object');assert.equal(Array.isArray(hostEnt.allowed_games),true);
+ const plans=await db.getSubscriptionPlans();assert.equal(plans.length>=3,true);
  const content=await db.getPackedQuestions();assert.equal(content.length,60);const loaded=calls;content[0][0]='tampered';assert.notEqual((await db.getPackedQuestions())[0][0],'tampered');assert.equal(calls,loaded);await db.getPackedQuestions({vip:true});assert.equal(calls,loaded+1);
  fail=true;now+=3600001;assert.deepEqual(await db.getPackedQuestions(),packedQuestions);await assert.rejects(db.checkHostSubscription('new-host'),e=>e.status===503);
  const invalid=createDatabase({env:cloudEnv,fetchImpl:async()=>response([{question:'Malformed',packed_options:[]}])});assert.deepEqual(await invalid.getPackedQuestions(),packedQuestions);

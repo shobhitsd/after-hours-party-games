@@ -13,7 +13,7 @@ test('Postgres migrations: private packs, concurrent-safe quota, VIP protection,
  GRANT USAGE ON SCHEMA auth TO anon,authenticated,service_role;
  CREATE SCHEMA storage;CREATE TABLE storage.buckets(id text PRIMARY KEY,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
  CREATE TABLE storage.objects(id uuid PRIMARY KEY,bucket_id text,name text);ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;`);
- for(const name of ['001_initial_schema.sql','002_row_level_security.sql','003_storage_buckets.sql','004_backend_integration.sql'])await db.exec(await readFile(new URL('../supabase/migrations/'+name,import.meta.url),'utf8'));
+ for(const name of ['001_initial_schema.sql','002_row_level_security.sql','003_storage_buckets.sql','004_backend_integration.sql','005_modular_subscription_permissions.sql'])await db.exec(await readFile(new URL('../supabase/migrations/'+name,import.meta.url),'utf8'));
  const a='11111111-1111-4111-8111-111111111111',b='22222222-2222-4222-8222-222222222222';
  await db.query('INSERT INTO auth.users VALUES($1),($2)',[a,b]);
  const questions=Array.from({length:5},(_,i)=>({question:'Question '+i,options:['A','B','C','D','E','F']}));
@@ -26,8 +26,12 @@ test('Postgres migrations: private packs, concurrent-safe quota, VIP protection,
  await assert.rejects(db.query('INSERT INTO custom_packs(host_id,title,questions) VALUES($1,$2,$3)',[a,'Bypass',JSON.stringify(questions)]),/permission denied/i);
  await assert.rejects(db.query('SELECT archive_game($1,$2)',['{}','[]']),/permission denied/i);
  await asUser(b);assert.equal((await db.query('SELECT * FROM custom_packs')).rows.length,0);
+ const freeEnt=(await db.query('SELECT get_user_entitlements($1) AS e',[b])).rows[0].e;assert.equal(freeEnt.plan_id,'free');assert.equal(freeEnt.is_active,false);assert.equal(freeEnt.max_players,10);
  await assert.rejects(db.query('SELECT save_custom_pack($1,$2,$3,false)',[ids[0],'Stolen',JSON.stringify(questions)]),/not found/i);
- await db.exec('RESET ROLE');await db.query("INSERT INTO subscriptions(user_id,provider_sub_id,status,valid_until) VALUES($1,'sub_vip','active',now()+interval '1 day')",[a]);
+ await db.exec('RESET ROLE');await db.query("INSERT INTO subscriptions(user_id,provider_sub_id,status,valid_until,plan_id) VALUES($1,'sub_vip','active',now()+interval '1 day','host_pass')",[a]);
+ const vipEnt=(await db.query('SELECT get_user_entitlements($1) AS e',[a])).rows[0].e;assert.equal(vipEnt.plan_id,'host_pass');assert.equal(vipEnt.is_active,true);assert.equal(vipEnt.max_players,20);assert.equal(vipEnt.allowed_games[0],'*');
+ await db.query("INSERT INTO user_entitlements(user_id,max_players,allowed_games) VALUES($1,35,ARRAY['exclusive_beta_game'])",[b]);
+ const overrideEnt=(await db.query('SELECT get_user_entitlements($1) AS e',[b])).rows[0].e;assert.equal(overrideEnt.max_players,35);assert.equal(overrideEnt.allowed_games.includes('exclusive_beta_game'),true);
  await asUser(a);await db.query('SELECT save_custom_pack(null,$1,$2,true)',['VIP fourth',JSON.stringify(questions)]);
  await asUser(b);assert.equal((await db.query('SELECT * FROM custom_packs')).rows.length,1);
  await db.exec('RESET ROLE');

@@ -11,6 +11,7 @@ import {database,serviceError} from './lib/supabase.js';
 import {createRoomStore} from './lib/redis.js';
 import {createBilling} from './lib/billing.js';
 import {handleCloudPost} from './lib/cloud-routes.js';
+import {evaluateGameAccess} from './lib/permissions.js';
 
 export const rooms=new Map(), streams=new Map(), limits=new Map();
 export const roomStore=createRoomStore({rooms});
@@ -99,6 +100,7 @@ export async function handleRequest(req,res){
    }
    if(req.method==='GET'&&(url.pathname==='/api/health'||url.pathname==='/api/ping'))return json(res,{application:'after-hours-party-games',version:'1.0.0'});
    if(req.method==='GET'&&url.pathname==='/api/games')return json(res,games);
+   if(req.method==='GET'&&url.pathname==='/api/plans')return json(res,await database.getSubscriptionPlans());
    if(req.method==='GET'&&url.pathname==='/api/options')return json(res,{defaults:defaultOptions,packs:[]});
    if(req.method==='GET'&&url.pathname==='/api/capabilities')return json(res,{accounts:database.configured(),payments:billing.configured(),transport:roomStore.shared?'poll':'sse'});
    if(req.method==='POST'&&url.pathname==='/api/webhooks/razorpay')return json(res,await billing.webhook(await rawBody(req),req.headers['x-razorpay-signature']));
@@ -120,6 +122,7 @@ export async function handleRequest(req,res){
        if(!roomStore.shared&&rooms.size>=1000)throw new Error('Server is full. Try again later.');
        if(b.practice!==undefined&&typeof b.practice!=='boolean')throw new Error('Practice must be true or false.');
        const user=await account(req,false);
+       if(b.game){const entitlements=await database.getHostEntitlements(user?.id);const access=evaluateGameAccess(entitlements,{gameSlug:b.game});if(!access.allowed)throw serviceError(access.reason,403);}
        for(let attempt=0;attempt<20;attempt++){
        const {room,host}=createRoom(code(),b.name,!!b.practice);
        if(b.game)configureRoom(room,host.id,b.game,b.options||defaultOptions);
@@ -135,9 +138,9 @@ export async function handleRequest(req,res){
      const user=url.pathname==='/api/start'?await account(req,false):null;
      const {result}=await roomRequest(req,async(room,p)=>{
      if(url.pathname==='/api/presence')return {ok:true};
-     if(url.pathname==='/api/start'){if(room.host!==p.id)throw new Error('Only the host can start the game.');room.selectedGame=b.game;await prepareContent(room,user);startGame(room,p.id,b.game,b.options||room.options);}
+     if(url.pathname==='/api/start'){if(room.host!==p.id)throw new Error('Only the host can start the game.');const entitlements=await database.getHostEntitlements(user?.id);const access=evaluateGameAccess(entitlements,{gameSlug:b.game,playerCount:room.players.length});if(!access.allowed)throw serviceError(access.reason,403);room.selectedGame=b.game;await prepareContent(room,user);startGame(room,p.id,b.game,b.options||room.options);}
      else if(url.pathname==='/api/take-seat')takeSeat(room,p.id);
-     else if(url.pathname==='/api/configure')configureRoom(room,p.id,b.game,b.options||room.options);
+     else if(url.pathname==='/api/configure'){if(b.game){const entitlements=await database.getHostEntitlements(user?.id);const access=evaluateGameAccess(entitlements,{gameSlug:b.game});if(!access.allowed)throw serviceError(access.reason,403);}configureRoom(room,p.id,b.game,b.options||room.options);}
      else if(url.pathname==='/api/action'){
        if(b.action!=='lobby'&&(b.round!==room.round||b.stage!==room.stage||b.game!==room.game||b.phaseId!==room.phaseId))throw new Error('The game has moved on. Please use the current screen.');
        act(room,p.id,b.action,b.value,b.requestId);
