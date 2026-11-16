@@ -202,7 +202,7 @@ export async function handleRequest(req,res){
      'Cache-Control':'no-cache',
      'X-Content-Type-Options':'nosniff',
      'Referrer-Policy':'same-origin',
-     'Content-Security-Policy':"default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self'; script-src 'self'; font-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
+     'Content-Security-Policy':"default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https: wss:; script-src 'self' 'unsafe-inline' https:; font-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
    });
    res.end(data);
  }catch(e){if(!res.headersSent)json(res,{error:e.message||'Something went wrong.'},e.status||400);else res.end();}
