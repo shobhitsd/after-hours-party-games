@@ -17,8 +17,9 @@ test('Packaged Vercel function boots, preserves rewritten routes and refuses vol
  const config=JSON.parse(await readFile('.vercel/output/config.json','utf8'));
  assert.equal(config.routes.find(r=>r.src==='/').dest,'/index.html');
  assert.equal((await readFile('.vercel/output/static/index.html','utf8')).includes('/app.js'),true);
- assert.equal(config.routes.find(r=>r.src==='/hidden-depths/?').dest,'/hidden-depths.html');
- assert.match(await readFile('.vercel/output/static/hidden-depths.html','utf8'),/hidden-depths.js/);
+ assert.equal(config.routes.find(r=>r.src==='/updraft/?').dest,'/hidden-depths.html');
+ assert.equal(config.routes.find(r=>r.headers?.Location==='/updraft').status,308);
+ assert.match(await readFile('.vercel/output/static/hidden-depths.html','utf8'),/updraft.js/);
  const publicFiles=await readdir('.vercel/output/static',{recursive:true});assert(!publicFiles.some(n=>/hidden-(content|engine|service|store)/.test(n)));
  const fn='.vercel/output/functions/api/index.func';
  const files=await readdir(fn,{recursive:true});assert.equal(files.some(n=>n.includes('.env')||n.includes('node_modules')),false);

@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "build": "node --check server.js && node --check public/app.js && node --check public/account-ui.js && node --check public/hidden-depths.js && node scripts/build-vercel.mjs",
+    "build": "node --check server.js && node --check public/app.js && node --check public/account-ui.js && node --check public/updraft.js && node --check public/updraft-tutorial.js && node --check public/updraft-motion.js && node scripts/build-vercel.mjs",
     "check:backend": "node scripts/check-backend.mjs",
     "seed:sql": "node scripts/seed-supabase.js --sql",
     "test:backend": "node --test test/backend.test.js test/database.test.js",

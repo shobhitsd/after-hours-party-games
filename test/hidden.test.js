@@ -119,6 +119,29 @@ test('guest claim is atomic, preserves existing daily/active account run, cannot
 test('hosted store fails closed without database; no local file fallback on Vercel',async()=>{
  const store=createHiddenStore({env:{VERCEL:'1'},database:{configured:()=>false}});assert.equal(store.local,false);await assert.rejects(store.read('g:'+'a'.repeat(64)),/database connection/);
 });
+test('Updraft: warm moves use one database call; fresh reads do not write; stale caches cannot double-score or bypass claims',async()=>{
+ const rows=new Map(),calls=[];let offline=false;
+ const database={configured:()=>true,verifyUser:async()=>({id:'11111111-1111-4111-8111-111111111111'}),request:async(endpoint,{body:b})=>{
+  calls.push(endpoint);if(offline)throw Object.assign(new Error('Database offline'),{status:503});
+  const row=key=>{if(!rows.has(key))rows.set(key,{revision:0,state:emptyPlayer()});return rows.get(key);};
+  if(endpoint==='rpc/hd_read')return structuredClone(row(b.p_key));
+  if(endpoint==='rpc/hd_cas'){const r=row(b.p_key);if(r.revision!==b.p_revision||r.state.claim)return false;rows.set(b.p_key,{revision:r.revision+1,state:structuredClone(b.p_state)});return true;}
+  if(endpoint==='rpc/hd_claim'){const g=row(b.p_guest),a=row(b.p_account);if(g.revision!==b.p_guest_revision||a.revision!==b.p_account_revision||g.state.claim)return false;rows.set(b.p_guest,{revision:g.revision+1,state:{...emptyPlayer(),claim:b.p_account}});rows.set(b.p_account,{revision:a.revision+1,state:structuredClone(b.p_state)});return true;}
+  throw new Error('Unexpected RPC');
+ }};
+ const service=()=>createHiddenService({store:createHiddenStore({env:{VERCEL:'1'},database}),database,now:()=>now,choose:()=>0});
+ const a=service(),b=service(),req={headers:{cookie:'hd_guest='+'b'.repeat(64)},serverless:true},res={setHeader(){}};
+ await a('/api/hidden/state',req,res,{});assert.deepEqual(calls.splice(0),['rpc/hd_read']);
+ const start=await a('/api/hidden/start',req,res,{requestId:randomUUID()});calls.length=0;
+ await b('/api/hidden/state',req,res,{});assert.deepEqual(calls.splice(0),['rpc/hd_read']);
+ const action={runId:start.run.id,revision:0,requestId:randomUUID(),action:'answer',prompt:'fruit',value:'Papaya'};
+ const won=await a('/api/hidden/move',req,res,action);assert.equal(won.run.score,10);assert.deepEqual(calls.splice(0),['rpc/hd_cas']);
+ await assert.rejects(b('/api/hidden/move',req,res,{...action,requestId:randomUUID(),value:'Apple'}),/Another tab/);assert.deepEqual(calls.splice(0),['rpc/hd_cas','rpc/hd_read']);
+ offline=true;await assert.rejects(a('/api/hidden/move',req,res,{...action,revision:1,requestId:randomUUID(),action:'probe',value:'P'}),/offline/);offline=false;
+ const signed={...req,headers:{...req.headers,'x-account-token':'test-account'}};await b('/api/hidden/state',signed,res,{});
+ await assert.rejects(a('/api/hidden/move',req,res,action),/moved to an account/);
+ const final=await b('/api/hidden/state',signed,res,{});assert.equal(final.run.score,10);assert.equal(final.run.phase,'probe');
+});
 test('Postgres-backed service survives new instances and concurrent guest-to-account claims',async()=>{
  const db=new PGlite();try{
   await db.exec('CREATE ROLE anon;CREATE ROLE authenticated;CREATE ROLE service_role BYPASSRLS;');await db.exec(await readFile(new URL('../supabase/migrations/006_hidden_depths.sql',import.meta.url),'utf8'));

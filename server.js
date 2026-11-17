@@ -101,6 +101,7 @@ export async function handleRequest(req,res){
      const route=url.searchParams.get('__route');
      url=new URL(route.startsWith('/')?route:'/api/'+route,'http://localhost');
    }
+   if(req.method==='GET'&&['/hidden-depths','/hidden-depths/','/hidden-depths.html'].includes(url.pathname)){res.writeHead(308,{Location:'/updraft'});return res.end();}
    if(req.method==='GET'&&(url.pathname==='/api/health'||url.pathname==='/api/ping'))return json(res,{application:'after-hours-party-games',version:'1.0.0'});
    if(req.method==='GET'&&url.pathname==='/api/games')return json(res,games);
    if(req.method==='GET'&&url.pathname==='/api/plans')return json(res,await database.getSubscriptionPlans());
@@ -178,6 +179,12 @@ export async function handleRequest(req,res){
      '/dom.js':'public/dom.js',
      '/packed-ui.js':'public/packed-ui.js',
      '/packed-proof.js':'public/packed-proof.js',
+     '/updraft':'public/hidden-depths.html',
+     '/updraft/':'public/hidden-depths.html',
+     '/updraft.js':'public/updraft.js',
+     '/updraft.css':'public/updraft.css',
+     '/updraft-tutorial.js':'public/updraft-tutorial.js',
+     '/updraft-motion.js':'public/updraft-motion.js',
      '/hidden-depths':'public/hidden-depths.html',
      '/hidden-depths.html':'public/hidden-depths.html',
      '/hidden-depths.js':'public/hidden-depths.js',

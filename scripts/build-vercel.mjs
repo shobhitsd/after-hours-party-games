@@ -21,7 +21,8 @@ await writeFile(path.join(output,'config.json'),JSON.stringify({version:3,routes
  ...(projectConfig.headers||[]).map(rule=>({src:rule.source,headers:Object.fromEntries(rule.headers.map(h=>[h.key,h.value])),continue:true})),
  {src:'/api(?:/.*)?',headers:{'Cache-Control':'no-store'},continue:true},
  {src:'/',dest:'/index.html'},
- {src:'/hidden-depths/?',dest:'/hidden-depths.html'},
+ {src:'/hidden-depths(?:/|\\.html)?',headers:{Location:'/updraft'},status:308},
+ {src:'/updraft/?',dest:'/hidden-depths.html'},
  {src:'/api/(.*)',dest:'/api/index?__route=$1'},
  {handle:'filesystem'}
 ]},null,2));

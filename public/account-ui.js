@@ -10,7 +10,7 @@ export async function ensureAccount(){
  if(!authSession||authSession.expires_at*1000>Date.now()+60000)return;
  refreshing??=request('account/refresh',{refresh_token:authSession.refresh_token},false).then(persist).catch(e=>{persist(null);profile=null;throw e;}).finally(()=>refreshing=null);await refreshing;
 }
-export async function initAccount(){try{features=await (await fetch('/api/capabilities')).json();if(features.accounts)await ensureAccount();}catch{} }
+export async function initAccount(){try{features=await (await fetch('/api/capabilities')).json();if(features.accounts)await ensureAccount();}catch{}return features;}
 export async function refreshAccount(){await ensureAccount();if(!authSession)return;profile=await request('account/me',{});packs=(await request('account/packs',{})).packs;}
 export const getAccountProfile=()=>profile;
 // Solo games can sign in without depending on the party host's custom-pack tables.
