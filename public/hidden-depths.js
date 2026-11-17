@@ -4,7 +4,8 @@ const root=document.querySelector('#game');
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let data=null,mode='practice',busy=false,error='',selected='',pending=null,capabilities={},shareText='';
 const uid=()=>crypto.randomUUID?.()||`move-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-const toast=message=>{document.querySelector('#notice').textContent=message;};
+let noticeTimer;
+const toast=message=>{clearTimeout(noticeTimer);document.querySelector('#notice').textContent=message;noticeTimer=setTimeout(()=>{document.querySelector('#notice').textContent='';},4500);};
 async function api(route,body={}){
  await ensureAccount();const r=await fetch('/api/hidden/'+route,{method:'POST',headers:{'Content-Type':'application/json',...accountHeaders()},body:JSON.stringify({mode,...body}),signal:AbortSignal.timeout(15000)});
  const result=await r.json();if(!r.ok)throw Object.assign(new Error(result.error||'Could not save this move. Please retry.'),{status:r.status});return result;

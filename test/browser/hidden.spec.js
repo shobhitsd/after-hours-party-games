@@ -22,7 +22,7 @@ test('Hidden Depths: invalid answers preserve input, prompts do not flicker, sam
  const second=await context.newPage();await second.goto('/hidden-depths');await second.getByRole('button',{name:/Resume your dive/}).click();await expect(second.locator('.probe-letters')).toBeVisible();
  await page.locator('[data-probe]').first().click();await second.locator('[data-probe]').first().click();await expect(second.locator('#solve-form')).toBeVisible();
  expect(await page.locator('.score-chip').textContent()).toBe(await second.locator('.score-chip').textContent());
- await page.getByLabel('End this dive early',{exact:false}).count();
+ await expect(page.locator('#notice')).toHaveText('',{timeout:7000});
 });
 test('homepage exposes solo game without mixing it into the multiplayer catalogue',async({page})=>{
  await page.goto('/');await expect(page.locator('.solo-discovery')).toBeVisible();await expect(page.locator('.game-card')).toHaveCount(6);await page.getByRole('link',{name:/Play solo for free/}).click();await expect(page).toHaveURL(/hidden-depths/);await expect(page.locator('h1')).toContainText('Hidden');

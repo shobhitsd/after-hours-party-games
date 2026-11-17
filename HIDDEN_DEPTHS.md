@@ -71,6 +71,12 @@ API, all same-origin JSON POSTs: `/api/hidden/state`, `/start`, `/move`, `/repor
 
 Automated tests establish the checked invariants, not fun, human difficulty, accessibility certification, or an internet-scale load guarantee. There is no claim that the old document's external simulation was reproduced.
 
+### Verified live on 17 November 2026
+
+The production release at `https://after-hours-party-games.vercel.app/hidden-depths` passed a complete five-round phone game using the hosted Postgres store. A temporary confirmed QA account verified real Supabase password sign-in, one-time guest progress transfer, a second browser/device resuming that same run, an unseen daily assignment, the exact early-solve calculation, and a same-day restart returning the same daily result. Anonymous direct RPC access was denied; the guest cookie had Secure/HttpOnly/SameSite flags, and live API views omitted the unrevealed answer. No browser JavaScript errors were observed. The temporary account and tracked QA records were removed after testing.
+
+The final full backend run passed **82 tests** (including 3,000 Hidden Depths stress dives); all **7 browser tests** passed across the five viewport sizes. Live screenshots and the eight-check report are saved in ignored `test-results/hidden-live-*` files. Subsequent UI-only polish makes save notifications dismiss automatically rather than covering the result indefinitely.
+
 ## Expansion and subscriptions
 
 Next: playtest the 30 assignments, review rejected-answer reports, broaden accepted dictionaries and vary prompt families. Track recognition, solve/bust/abandon rates and support feedback before freezing difficulty bands. Build a reviewed publication queue for 100, then 300, then 1,000+ canonical answers; validators are necessary but do not replace editorial review.
