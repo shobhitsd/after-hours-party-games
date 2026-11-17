@@ -17,6 +17,9 @@ test('Packaged Vercel function boots, preserves rewritten routes and refuses vol
  const config=JSON.parse(await readFile('.vercel/output/config.json','utf8'));
  assert.equal(config.routes.find(r=>r.src==='/').dest,'/index.html');
  assert.equal((await readFile('.vercel/output/static/index.html','utf8')).includes('/app.js'),true);
+ assert.equal(config.routes.find(r=>r.src==='/hidden-depths/?').dest,'/hidden-depths.html');
+ assert.match(await readFile('.vercel/output/static/hidden-depths.html','utf8'),/hidden-depths.js/);
+ const publicFiles=await readdir('.vercel/output/static',{recursive:true});assert(!publicFiles.some(n=>/hidden-(content|engine|service|store)/.test(n)));
  const fn='.vercel/output/functions/api/index.func';
  const files=await readdir(fn,{recursive:true});assert.equal(files.some(n=>n.includes('.env')||n.includes('node_modules')),false);
  const settings=JSON.parse(await readFile(fn+'/.vc-config.json','utf8'));assert.equal(settings.handler,'api/index.js');assert.equal(settings.shouldAddHelpers,false);
@@ -25,5 +28,6 @@ test('Packaged Vercel function boots, preserves rewritten routes and refuses vol
  try{
   for(const route of ['health','games','options','capabilities']){const r=await fetch(base+'/api/index?__route='+route,{headers:{'x-matched-path':'/api/index'}});assert.equal(r.status,200,route);assert.match(r.headers.get('content-type'),/json/);const body=await r.json();if(route==='games')assert.equal(Object.keys(body).length,6);}
   const create=await fetch(base+'/api/index?__route=create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'Host',game:'packed'})});assert.equal(create.status,503);assert.match((await create.json()).error,/Upstash/);
+  const solo=await fetch(base+'/api/index?__route=hidden/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({requestId:'deployment-test-start'})});assert.equal(solo.status,503);assert.match((await solo.json()).error,/database/);
  }finally{server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
 });

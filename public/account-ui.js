@@ -13,6 +13,12 @@ export async function ensureAccount(){
 export async function initAccount(){try{features=await (await fetch('/api/capabilities')).json();if(features.accounts)await ensureAccount();}catch{} }
 export async function refreshAccount(){await ensureAccount();if(!authSession)return;profile=await request('account/me',{});packs=(await request('account/packs',{})).packs;}
 export const getAccountProfile=()=>profile;
+// Solo games can sign in without depending on the party host's custom-pack tables.
+export async function signInAccount(intent,data){
+ const result=await request('account/'+(intent==='signup'?'signup':'signin'),data,false);
+ if(!result.access_token)return 'Check your email to confirm your account, then sign in.';
+ persist(result);return 'Signed in.';
+}
 export function accountMarkup(esc,currentQuestions=[]){
  if(!authSession)return `<h2>Your host account</h2><p>Guests can play without an account. Sign in to save packs across devices.</p><form id="account-form"><label for="account-email">Email</label><input id="account-email" name="email" type="email" required autocomplete="email" maxlength="254"><label for="account-password">Password</label><input id="account-password" name="password" type="password" required minlength="8" maxlength="256" autocomplete="current-password"><div class="form-error" role="alert"></div><div class="modal-actions"><button class="btn primary" type="submit" name="intent" value="signin">Sign in</button><button class="btn outline" type="submit" name="intent" value="signup">Create account</button></div></form><p class="micro-note">New accounts may need email confirmation before sign-in.</p>`;
  const perms=profile?.permissions||{allowed_games:['*'],max_players:10,custom_packs_limit:3,vip_questions:false};

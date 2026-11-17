@@ -13,6 +13,10 @@ import {createBilling} from './lib/billing.js';
 import {handleCloudPost} from './lib/cloud-routes.js';
 import {evaluateGameAccess} from './lib/permissions.js';
 import {resolvePublicOrigin} from './lib/origin.js';
+import {createHiddenStore} from './lib/hidden-store.js';
+import {createHiddenService} from './lib/hidden-service.js';
+const hiddenStore=createHiddenStore({database});
+const hiddenService=createHiddenService({database,store:hiddenStore});
 
 export const rooms=new Map(), streams=new Map(), limits=new Map();
 export const roomStore=createRoomStore({rooms});
@@ -114,6 +118,7 @@ export async function handleRequest(req,res){
      if(roomStore.shared){if(!await roomStore.rateLimit(rateKey,max))throw serviceError('Please slow down and try again shortly.',429);}else{const rate=limits.get(rateKey)||{n:0,at:Date.now()};if(Date.now()-rate.at>60000){rate.n=0;rate.at=Date.now();}rate.n++;limits.set(rateKey,rate);if(rate.n>max)throw serviceError('Please slow down and try again shortly.',429);}
      const b=await body(req);
      if(!b||typeof b!=='object'||Array.isArray(b))throw new Error('Send a JSON object.');
+     if(url.pathname.startsWith('/api/hidden/'))return json(res,await hiddenService(url.pathname,req,res,b));
      if(url.pathname==='/api/validate-options')return json(res,{options:validateOptions(b.options)});
      const cloud=await handleCloudPost(url.pathname,req,b,{database,billing,account});if(cloud!==undefined)return json(res,cloud);
      if(url.pathname==='/api/create'){
@@ -173,6 +178,10 @@ export async function handleRequest(req,res){
      '/dom.js':'public/dom.js',
      '/packed-ui.js':'public/packed-ui.js',
      '/packed-proof.js':'public/packed-proof.js',
+     '/hidden-depths':'public/hidden-depths.html',
+     '/hidden-depths.html':'public/hidden-depths.html',
+     '/hidden-depths.js':'public/hidden-depths.js',
+     '/hidden-depths.css':'public/hidden-depths.css',
      '/styles.css':'public/styles.css',
      '/gameplay.css':'public/gameplay.css',
      '/packed.css':'public/packed.css',

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1">
+ <meta name="theme-color" content="#092e39">
+ <meta name="description" content="Answer trivia. Earn letters. Dive beneath the surface to uncover the hidden answer. A free solo word game from After Hours.">
+ <title>Hidden Depths · After Hours</title>
+ <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+ <link rel="stylesheet" href="/hidden-depths.css">
+ <script type="module" src="/hidden-depths.js"></script>
+</head>
+<body>
+ <header class="nav"><a class="brand" href="/">✳ <span>after hours</span></a><span class="nav-caption">A LITTLE TIME FOR YOURSELF</span><button id="account-open" class="quiet">Your account</button></header>
+ <main id="game" aria-busy="true"><div class="loading">Preparing your dive…</div></main>
+ <footer><a href="/">Back to the party games ↗</a><span>Curiosity goes a long way.</span></footer>
+ <div id="notice" role="status" aria-live="polite"></div>
+ <dialog id="account-dialog" aria-labelledby="account-title"><button class="close" data-close aria-label="Close account">×</button><div id="account-content"></div></dialog>
+ <dialog id="report-dialog" aria-labelledby="report-title"><button class="close" data-close aria-label="Close report">×</button><h2 id="report-title">Something we missed?</h2><p>Our starter dictionary is curated and still growing. Send a valid answer we should include, or tell us about a puzzle problem.</p><form id="report-form"><label for="report-text">Your feedback</label><textarea id="report-text" name="text" required maxlength="300" rows="4"></textarea><p class="form-error" role="alert"></p><button class="primary" type="submit">Send for review</button></form></dialog>
+ <noscript>This game needs JavaScript. Enable it in your browser to start a dive.</noscript>
+</body>
+</html>

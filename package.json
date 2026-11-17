@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "build": "node --check server.js && node --check public/app.js && node --check public/account-ui.js && node scripts/build-vercel.mjs",
+    "build": "node --check server.js && node --check public/app.js && node --check public/account-ui.js && node --check public/hidden-depths.js && node scripts/build-vercel.mjs",
     "check:backend": "node scripts/check-backend.mjs",
     "seed:sql": "node scripts/seed-supabase.js --sql",
     "test:backend": "node --test test/backend.test.js test/database.test.js",
@@ -15,7 +15,9 @@
     "test:ui": "playwright test",
     "test:load": "node test/load.mjs",
     "test:packed": "node --test test/packed.test.js",
-    "test:exhaustive": "node test/packed-exhaustive.mjs"
+    "test:exhaustive": "node test/packed-exhaustive.mjs",
+    "test:hidden": "node --test test/hidden.test.js",
+    "test:hidden:ui": "playwright test test/browser/hidden.spec.js"
   },
   "engines": {
     "node": "24.x"
