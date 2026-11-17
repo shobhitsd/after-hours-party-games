@@ -98,3 +98,16 @@ Public views may include the next pair of prompt titles at the decision step. Th
 The previous backend reread a guest record and rewrote unchanged state. The service now reuses its first read and skips unchanged read-only writes. Hosted instances maintain a bounded 128-identity, 30-second private read cache for moves only. Every move, including an identical retry from cache, must pass Postgres compare-and-swap before it is returned. Conflicts invalidate the cache and reread the database. State reads and starts always read fresh records; database failure never falls back to accepting cached moves. This reduces warm guest moves to one database RPC while preserving cross-device and guest-claim correctness. Auth checks remain server-side.
 
 Verification: 85 Node tests passed, including 3,000 stress flights and new tests for stale caches, duplicate scoring, claims, database outages and synchronous tutorial rules. Browser coverage adds offline tutorial play, immediate next-round rendering under a delayed server response, preserving typed drafts, failed-save rollback, particle cleanup and reduced-motion behaviour to the five existing responsive sizes. Live timings are compared with the previous deployment; exact results are recorded separately after deployment.
+
+### Live speed verification
+
+All **11 browser checks passed** against an isolated checkout of release `db01daa`, as did the 85 Node tests. The live deployment was then checked on desktop and phone, including the old URL redirect, resuming an existing guest flight, immediate next-round rendering, an offline tutorial solve, and confirmation that tutorial play leaves the real run untouched. No JavaScript errors were observed.
+
+| Check | Previous deployment | Updraft |
+| --- | ---: | ---: |
+| Median server-confirmed move (8 requests per version) | 2,534 ms | 949 ms |
+| Median progress read (3 requests per version) | 2,128 ms | 740 ms |
+| Next-round UI update during live save | Waited for response | 1.6 ms |
+| Tutorial answer-to-letter transition | No separate offline tutorial | 6.3 ms |
+
+These are measured samples from this connection, not latency guarantees. Server-side answer and scoring validation still depends on the network. The immediate next screen and tutorial do not wait for decorative animations. Raw live reports and screenshots are in ignored `test-results/updraft-*` files.
