@@ -27,9 +27,10 @@ async function api(route,body={}){
 function trackQuick(run,full=false){
  const key=run&&run.status==='active'&&run.phase==='answer'&&run.timing?.timed?`${run.id}:${run.round}`:'';
  if(!key){quickKey='';return;}
- const deadline=Date.now()+(full?quickWindowMs:run.timing.quickLeftMs);
- // Never extend a window the player has already been watching.
- quickDeadline=key===quickKey?Math.min(quickDeadline,deadline):deadline;quickKey=key;
+ if(key!==quickKey){
+  quickKey=key;
+  quickDeadline=Date.now()+(full?quickWindowMs:(run.timing.quickLeftMs!=null&&run.timing.quickLeftMs>0?run.timing.quickLeftMs:quickWindowMs));
+ }
 }
 function quickMeter(r){
  if(!r.timing?.timed)return '<div class="quick-meter untimed" data-quick><span class="quick-ring" aria-hidden="true"></span><div><strong>Untimed lesson</strong><small>Real flights add a quick-answer bonus</small></div></div>';
@@ -189,7 +190,7 @@ async function perform(route,body={},retry=false){
  busy=true;error='';suggestion=null;disarmHint();if(!retry)pending={route,body:{...body}};
  // Only the already-published prompt titles are predicted. Points, probes, hints and
  // guesses ALWAYS wait for the server. Typing can begin while Next is saved.
- if(route==='move'&&body.action==='next'&&before?.nextPrompts?.length){optimistic=true;data={...data,run:{...before,phase:'answer',round:before.round+1,prompts:before.nextPrompts,nextPrompts:[],lastGuess:null}};selected='';trackQuick(data.run,true);}
+ if(route==='move'&&body.action==='next'&&before?.nextPrompts?.length){optimistic=true;data={...data,run:{...before,phase:'answer',round:before.round+1,prompts:before.nextPrompts,nextPrompts:[],lastGuess:null,timing:{...before?.timing,quickLeftMs:quickWindowMs}}};selected='';trackQuick(data.run,true);}
  render();if(optimistic)feedback(before,data.run,'next');
  try{
   const result=await api(route,body);if(epoch!==requestEpoch)return;data=result;pending=null;if(!optimistic)selected='';shareText='';inGame=true;rememberView();
