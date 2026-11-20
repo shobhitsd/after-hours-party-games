@@ -20,9 +20,13 @@ test('Updraft tutorial: hints follow the real rules and cost Fuel',()=>{
  assert.equal(r.parts.fuel,60);assert.equal(r.score,10+5+100+60+240+25);
  let low=createTutorial();low.air=1;assert.throws(()=>tutorialMove(low,'hint'),/last Fuel/);
 });
-test('Updraft tutorial: forgiving matching handles typos on answers and solve',()=>{
+test('Updraft tutorial: typos require confirmation without spending Fuel or awarding points',()=>{
  let r=createTutorial();
- r=tutorialMove(r,'answer','Papya','fruit');assert.equal(r.history[0].answer,'Papaya');
+ const before=structuredClone(r);
+ assert.throws(()=>tutorialMove(r,'answer','Papya','fruit'),{code:'ANSWER_CONFIRMATION_REQUIRED',suggestion:{word:'Papaya'}});assert.deepEqual(r,before);
+ r=tutorialMove(r,'answer','Papaya','fruit');assert.equal(r.history[0].answer,'Papaya');
  r=tutorialMove(r,'probe','P');
- r=tutorialMove(r,'solve','Paper planes');assert.equal(r.status,'solved');
+ const decision=structuredClone(r);
+ assert.throws(()=>tutorialMove(r,'solve','Paper plnae'),{code:'ANSWER_CONFIRMATION_REQUIRED',suggestion:{word:'Paper plane'}});assert.deepEqual(r,decision);
+ r=tutorialMove(r,'solve','Paper plane');assert.equal(r.status,'solved');
 });

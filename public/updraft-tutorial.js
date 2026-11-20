@@ -3,6 +3,7 @@
 // it awards no quick-answer or swift-solve bonuses, so its score is always reproducible.
 import {RULES,solveParts,rating} from './updraft-rules.js';
 const target='PAPER PLANE',clue='Fold a single sheet, pinch the nose and throw.';
+const suggestAnswer=word=>{throw Object.assign(new Error(`Did you mean ${word}?`),{code:'ANSWER_CONFIRMATION_REQUIRED',suggestion:{word}});};
 const normalize=s=>String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/[^A-Z]/g,'');
 const pairs=[
  [['fruit','Name a fruit','🍋','Papaya|Apple|Banana|Pear|Grape'],['animal','Name an animal','🐾','Panda|Elephant|Cat|Dog|Rabbit']],
@@ -42,7 +43,7 @@ export function tutorialMove(previous,action,value,prompt){
  const end=status=>{r.status=status;r.phase='finished';};
  if(action==='answer'){
   phase('answer');const p=pairs[r.history.length].find(p=>p[0]===prompt);if(!p)throw new Error('Choose a prompt first.');
-  const options=p[3].split('|'),normVal=normalize(value);let word=options.find(w=>normalize(w)===normVal);if(!word&&normVal.length>=4){word=options.find(w=>{const nw=normalize(w);return Math.abs(normVal.length-nw.length)<=1&&editDist(normVal,nw)<=1;});}if(!word)throw new Error('For this guided example, try '+options.slice(0,3).join(', ')+'.');
+  const options=p[3].split('|'),normVal=normalize(value);const word=options.find(w=>normalize(w)===normVal);if(!word&&normVal.length>=4){const matches=options.filter(w=>{const nw=normalize(w);return Math.abs(normVal.length-nw.length)<=1&&editDist(normVal,nw)<=1;});if(matches.length===1)suggestAnswer(matches[0]);}if(!word)throw new Error('For this guided example, try '+options.slice(0,3).join(', ')+'.');
   if(r.history.some(h=>normalize(h.answer)===normalize(word)))throw new Error('Try a word you have not used yet.');
   const points=word==='Papaya'?RULES.tiers.Uncommon:RULES.tiers.Common,available=[...new Set(normalize(word))].filter(l=>!r.tested.includes(l));
   r.rarity+=points;r.history.push({prompt:p[1],answer:word,points,quick:0,bonus:0,tier:points===RULES.tiers.Uncommon?'Uncommon':'Common',letter:null,result:available.length?'pending':'echo'});r.phase=available.length?'probe':'decision';
@@ -65,7 +66,7 @@ export function tutorialMove(previous,action,value,prompt){
  else if(action==='next'){phase('decision');if(r.history.length>=RULES.rounds)throw new Error('All rounds are complete.');r.phase='answer';r.lastGuess=null;}
  else if(action==='solve'){
   phase('decision');if(r.wrong>=RULES.guesses)throw new Error('All guesses have been used.');if(!normalize(value))throw new Error('Type your guess first.');
-  const k=normalize(value).replace(/^THE/,''),cleanTarget=normalize(target).replace(/^THE/,'');if(k===cleanTarget||(cleanTarget.length>=8&&editDist(k,cleanTarget)<=2)||(cleanTarget.length>=6&&editDist(k,cleanTarget)<=1)){r.parts=solveParts({air:r.air,rounds:r.history.length,wrong:r.wrong,timed:false});r.bonus=r.parts.total;end('solved');}
+  const k=normalize(value).replace(/^THE/,''),cleanTarget=normalize(target).replace(/^THE/,'');if(k===cleanTarget||(cleanTarget.length>=8&&editDist(k,cleanTarget)<=2)||(cleanTarget.length>=6&&editDist(k,cleanTarget)<=1)){if(k!==cleanTarget)suggestAnswer('Paper plane');r.parts=solveParts({air:r.air,rounds:r.history.length,wrong:r.wrong,timed:false});r.bonus=r.parts.total;end('solved');}
   else{r.wrong++;r.air=Math.max(0,r.air-RULES.wrongCost);r.lastGuess=String(value).slice(0,100);if(!r.air)end('bust');else if(r.history.length===RULES.rounds&&r.wrong===RULES.guesses)end('unsolved');}
  }else if(action==='finish'){phase('decision');if(r.history.length!==RULES.rounds)throw new Error('Complete the five rounds first.');end('unsolved');}
  else if(action==='abandon')end('abandoned');else throw new Error('Unknown tutorial action.');

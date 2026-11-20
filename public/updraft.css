@@ -180,3 +180,42 @@
  .daily-button{padding:10px 13px}
 }
 @media(max-width:360px){.hint-button{padding:6px 11px;font-size:12px}.quick-meter small{font-size:10px}}
+
+/* A small, non-sticky sky leaves the flight deck in charge on phones. */
+.answer-suggestion{margin:16px 0;padding:16px;border:1px solid #c7dcd6;border-radius:14px;background:#f0f8f3}
+.answer-suggestion p{margin:0 0 8px}.answer-suggestion>div{display:flex;flex-wrap:wrap;gap:8px}.answer-suggestion button{min-height:44px}
+@media(max-width:760px){
+ .ud-gsap .ud-shell[data-playing="true"] .ud-scene{height:210px;position:relative;top:0;z-index:auto}
+ .ud-gsap .ud-shell[data-playing="true"] .ud-balloon-position,.ud-gsap .ud-shell[data-playing="true"] .ud-afterimages{width:90px;height:130px;top:12px;margin-left:-45px}
+ .ud-gsap .ud-shell[data-playing="true"] .ud-dialogue{top:47px;bottom:50px;min-height:0;padding:9px 11px}
+ .ud-gsap .ud-shell[data-playing="true"] .ud-dialogue>span{font-size:8px}
+ .ud-gsap .ud-shell[data-playing="true"] .ud-dialogue p{font-size:12px;line-height:1.35}
+ .ud-gsap .ud-shell[data-playing="true"] .ud-scene-heading{top:10px}
+ .ud-gsap .ud-shell[data-playing="true"] .ud-scene-tools{bottom:9px}
+ .ud-gsap .ud-shell[data-playing="true"] .ud-closeup{top:35px;bottom:48px}
+ .ud-gsap .ud-shell #game input,.ud-gsap .ud-shell #game button,.ud-gsap .ud-shell .action-panel{scroll-margin-top:16px}
+ .ud-shell .puzzle-panel{padding:16px}.ud-shell .hidden-words{margin:16px 0}
+ .ud-shell .tutorial-guide{padding:10px 12px;margin-block:12px}
+ .ud-shell .action-panel{padding:18px 16px}.ud-shell .action-panel h2{font-size:23px}
+ .ud-shell .action-panel .prompt{padding:12px;min-height:94px}
+ .ud-shell .action-panel .input-row{gap:9px}.ud-shell .action-panel input{font-size:16px}
+ /* Focus is useful even with a hardware keyboard; visualViewport keeps this through keyboard dismissal. */
+ .ud-input-active .ud-shell[data-playing="true"] .ud-scene{display:none}
+ .ud-input-active .nav,.ud-input-active footer,.ud-input-active .tutorial-guide,.ud-input-active .play-layout aside,.ud-input-active .play-heading{display:none}
+ .ud-input-active .ud-shell{padding-top:8px;gap:0}
+ .ud-input-active .puzzle-panel{position:sticky;top:0;z-index:8;padding:10px 12px;box-shadow:0 3px 10px #304d5810;background:#f1f3ed}
+ .ud-input-active .puzzle-top{gap:6px}.ud-input-active .puzzle-top p,.ud-input-active .puzzle-top small,.ud-input-active .puzzle-top .hint-button,.ud-input-active .altimeter{display:none}
+ .ud-input-active .puzzle-top strong{font-size:12px}.ud-input-active .score-chip{padding:3px 8px}.ud-input-active .score-chip strong{font-size:18px}
+ .ud-input-active .hidden-words{margin:10px 0;gap:5px}.ud-input-active .letter-tile{height:32px;min-height:32px;max-width:28px;font-size:16px}
+ .ud-input-active .puzzle-panel .round-track,.ud-input-active .puzzle-panel .flight-balloon,.ud-input-active .puzzle-panel .air{display:none}
+ .ud-input-active .action-panel{margin-top:12px;padding:12px}
+ .ud-input-active .action-panel h2{font-size:18px}.ud-input-active .action-panel>.panel-head+p{display:none}
+ .ud-input-active .action-panel .prompt-grid{gap:8px;margin-block:10px}
+ .ud-input-active .action-panel .prompt{min-height:56px;padding:8px;display:flex;align-items:center;gap:7px}
+ .ud-input-active .prompt strong{font-size:12px}.ud-input-active .prompt-icon{font-size:18px;width:24px;height:24px;flex:none;margin:0}
+ .ud-input-active .prompt-number,.ud-input-active .prompt>i,.ud-input-active .action-panel .quick-slot{display:none}
+ .ud-input-active .action-panel .input-row{display:flex;flex-wrap:wrap}.ud-input-active .action-panel input{flex:1 1 110px;min-width:0;width:100%;padding:12px}
+ .ud-input-active .action-panel .input-row>.primary{flex:0 0 auto;width:auto;padding:10px 12px;min-height:44px;font-size:13px}
+ .ud-input-active .panel-foot{margin-top:10px}.ud-input-active .action-panel>p{font-size:13px;margin-block:8px}
+ .answer-suggestion>div{flex-direction:column}.answer-suggestion button{width:100%}
+}

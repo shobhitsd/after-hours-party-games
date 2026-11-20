@@ -59,17 +59,15 @@ export function stageEnter(root,kind){
  });
 }
 // The step card tips in from above and its contents rise in sequence.
+const enteredPanels=new WeakSet();
 function dealPanel(tl,panel,at=0){
- if(!panel)return;
- tl.fromTo(panel,{rotationX:-11,y:DECK.rise,opacity:0,transformPerspective:DECK.perspective,transformOrigin:'50% 0%'},{rotationX:0,y:0,opacity:1,duration:DECK.enter,ease:CONFIG.ease.rise},at);
- const parts=[...panel.children].filter(el=>!el.matches('.prompt-grid,.probe-letters'));
- tl.fromTo(parts,{y:DECK.rise*.6,opacity:0},{y:0,opacity:1,duration:DECK.enter*.8,ease:CONFIG.ease.out,stagger:DECK.stagger*.8},at+DECK.enter*.25);
- // Two prompt cards swing in like opening doors; launch keys flip up like keycaps.
- panel.querySelectorAll('.prompt').forEach((card,i)=>tl.fromTo(card,{rotationY:i?-38:38,x:i?40:-40,opacity:0,transformPerspective:DECK.perspective},{rotationY:0,x:0,opacity:1,duration:DECK.enter*1.15,ease:CONFIG.ease.rebound},at+DECK.enter*.3+i*DECK.stagger));
- tl.fromTo(panel.querySelectorAll('.probe-letters button'),{rotationX:95,y:18,opacity:0,transformPerspective:DECK.tilePerspective,transformOrigin:'50% 100%'},{rotationX:0,y:0,opacity:1,duration:DECK.flip*.75,ease:CONFIG.ease.rebound,stagger:DECK.tileStagger*1.4},at+DECK.enter*.35);
- const banner=panel.querySelector('.rarity-banner');if(banner)tl.fromTo(banner,{scale:1.18,rotationX:28,transformPerspective:DECK.perspective},{scale:1,rotationX:0,duration:DECK.enter,ease:CONFIG.ease.rebound},at+DECK.enter*.2);
+ if(!panel||enteredPanels.has(panel))return;enteredPanels.add(panel);
+ // Keep controls visible throughout. A save acknowledgement must never deal the same cards twice.
+ tl.fromTo(panel,{y:DECK.rise*.25},{y:0,duration:DECK.enter*.65,ease:CONFIG.ease.out},at);
+ panel.querySelectorAll('.prompt').forEach((card,i)=>tl.fromTo(card,{rotationY:i?-6:6,y:4,transformPerspective:DECK.perspective},{rotationY:0,y:0,duration:DECK.enter*.65,ease:CONFIG.ease.out},at));
+ tl.fromTo(panel.querySelectorAll('.probe-letters button'),{y:6},{y:0,duration:DECK.flip*.5,ease:CONFIG.ease.out,stagger:DECK.tileStagger},at);
 }
-export function stepEnter(panel){if(panel)controlSequence(tl=>dealPanel(tl,panel));}
+export function stepEnter(panel){if(panel&&!enteredPanels.has(panel))controlSequence(tl=>dealPanel(tl,panel));}
 // A revealed tile turns over on its horizontal axis and hops; later tiles follow in a wave.
 export function flipTiles(tiles){
  tiles.forEach((tile,order)=>{

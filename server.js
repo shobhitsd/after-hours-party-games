@@ -221,7 +221,7 @@ export async function handleRequest(req,res){
      'Content-Security-Policy':"default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https: wss:; script-src 'self' 'unsafe-inline' https:; font-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
    });
    res.end(data);
- }catch(e){if(!res.headersSent)json(res,{error:e.message||'Something went wrong.'},e.status||400);else res.end();}
+ }catch(e){if(!res.headersSent)json(res,{error:e.message||'Something went wrong.',...(e.code==='ANSWER_CONFIRMATION_REQUIRED'?{code:e.code,suggestion:{word:e.suggestion.word}}:{})},e.status||400);else res.end();}
 }
 
 export default handleRequest;

@@ -2,12 +2,13 @@ import {patchHTML} from './dom.js';
 import {initAccount,ensureAccount,accountHeaders,signInAccount,accountAction} from './account-ui.js';
 import {createTutorial,tutorialMove,tutorialTip,restoreTutorial} from './updraft-tutorial.js';
 import {RULES,quickBonus,quickWindowMs} from './updraft-rules.js';
-import {press,selectPrompt,sending,feedback,invalid,launchLetter,syncCinema,stageEnter,armDepth} from './updraft-motion.js';
+import {press,selectPrompt,sending,feedback,invalid,launchLetter,syncCinema,stageEnter,armDepth,clearControlMotion} from './updraft-motion.js';
 
 const root=document.querySelector('#game');
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>crypto.randomUUID?.()||`move-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 let data=null,mode='practice',busy=false,error='',selected='',pending=null,capabilities={},shareText='',inGame=false;
+let suggestion=null;
 let inTutorial=false,tutorial=null,requestEpoch=0,noticeTimer,hintArmed=false,hintTimer,quickKey='',quickDeadline=0,stage='';
 const drafts=new Map();
 const activeRun=()=>inTutorial?tutorial:data?.run;
@@ -19,7 +20,7 @@ try{const saved=sessionStorage.getItem('hd-view');if(saved==='tutorial'){tutoria
 
 async function api(route,body={}){
  await ensureAccount();const response=await fetch('/api/hidden/'+route,{method:'POST',headers:{'Content-Type':'application/json',...accountHeaders()},body:JSON.stringify({mode,...body}),signal:AbortSignal.timeout(15000)});
- const result=await response.json();if(!response.ok)throw Object.assign(new Error(result.error||'Could not save this move. Please retry.'),{status:response.status});return result;
+ const result=await response.json();if(!response.ok)throw Object.assign(new Error(result.error||'Could not save this move. Please retry.'),{status:response.status,code:result.code,suggestion:result.suggestion});return result;
 }
 
 // ---- Quick-answer window: the server decides the bonus; this only shows its clock. ----
@@ -65,7 +66,7 @@ function instructions(){
  <tr><th>Solve</th><td>${RULES.solve} + ${RULES.perFuel} per Fuel left + ${RULES.perRound} per unused round</td></tr>
  <tr><th>Swift flight</th><td>up to +${RULES.swift}: full under ${RULES.swiftFullSeconds}s of play, fading to 0 at ${RULES.swiftZeroSeconds/60} minutes. Pauses longer than ${RULES.idleCapMs/1000}s are not counted against you.</td></tr>
  <tr><th>First-guess solve</th><td>+${RULES.clean} when your very first guess is right</td></tr></tbody></table>
- <p>Solving early always beats collecting another answer. Time is measured by the server and only ever adds a bonus; there is no countdown that ends your flight. Spaces, accents, punctuation and a leading “the” never matter; simple plurals and single typos in longer answers are accepted.</p>
+ <p>Solving early always beats collecting another answer. Time is measured by the server and only ever adds a bonus; there is no countdown that ends your flight. Spaces, accents, punctuation and a leading “the” never matter; simple plurals and close spellings are suggested for you to confirm.</p>
  <p>Rarity tiers are editorial, not player statistics. Results are personal: different mysteries have different difficulty, so there is no public leaderboard. The guided tutorial is a separate, untimed teaching example.</p></details>`;
 }
 const stars=n=>`<span class="stars" role="img" aria-label="${n} of 5 stars">${Array.from({length:5},(_,i)=>`<i class="${i<n?'lit':''}" aria-hidden="true">★</i>`).join('')}</span>`;
@@ -88,6 +89,11 @@ function welcome(){
  <p class="small">${data?`${data.remaining} of ${data.librarySize} mysteries still to discover.`:'Getting your saved progress…'} No account needed to play. The tutorial runs instantly in your browser.</p></div>${skyArt()}</section>${errorBox()}<div class="welcome-bottom">${instructions()}${log()}</div>`;
 }
 function errorBox(){return `<div id="game-error" class="error ${error?'visible':''}" role="alert">${esc(error)}${pending&&!inTutorial?'<button class="text-button" data-retry>Retry this move</button>':''}${!data&&!inTutorial?'<button class="text-button" data-refresh>Try again</button>':''}</div>`;}
+function suggestMatch(e,run,body){
+ if(e.code!=='ANSWER_CONFIRMATION_REQUIRED'||typeof e.suggestion?.word!=='string'||!run)return false;
+ suggestion={word:e.suggestion.word,runId:run.id,revision:run.revision,action:body.action,prompt:body.prompt};error='';return true;
+}
+function suggestionBox(r,action){return suggestion&&suggestion.runId===r.id&&suggestion.revision===r.revision&&suggestion.action===action?`<section class="answer-suggestion" data-key="suggestion" aria-label="Confirm your answer"><p role="status">Did you mean <strong>${esc(suggestion.word)}</strong>?</p><p class="small">Your answer has not been submitted yet.</p><div><button class="primary" data-confirm-answer ${locked()?'disabled':''}>Yes, use ${esc(suggestion.word)}</button><button class="secondary" data-edit-answer>No, edit my answer</button></div></section>`:'';}
 // Each tile is a two-faced 3D card: the blank face, and the letter face it flips to.
 function mask(r){let index=0;return `<div class="hidden-words" aria-label="Hidden answer: ${esc(r.mask.split('').join(' '))}">${r.mask.split(' ').map(w=>{const tiles=[...w].map(c=>{const i=index++;return c==='-'?'<span class="hyphen">−</span>':`<span data-letter-index="${i}" class="letter-tile ${c!=='_'?'revealed':''}"><span class="tile-inner"><span class="tile-front" aria-hidden="true">·</span><span class="tile-back">${c==='_'?'':esc(c)}</span></span></span>`;}).join('');index++;return `<span class="hidden-word">${tiles}</span>`;}).join('')}</div>`;}
 const altitudeTier=m=>{if(m<300)return 'Breeze Level';if(m<800)return 'Cloud Surfer';if(m<1500)return 'High Thermal';if(m<2500)return 'Stratosphere';return 'Aurora Orbit';};
@@ -108,7 +114,7 @@ function panel(r){
   const chosen=r.prompts.find(p=>p.id===selected);
   return `<div class="panel-head"><div><span class="eyebrow">ROUND ${r.round} OF 5 · PICK YOUR STARTING POINT</span><h2>A bright idea takes flight.</h2></div><div class="quick-slot">${quickMeter(r)}</div></div><p>Pick a prompt. Your answer gives you points and letters to launch.</p>
   <div class="prompt-grid ${selected?'has-choice':''}" role="group" aria-label="Choose your trivia prompt">${r.prompts.map((p,i)=>`<button class="prompt ${selected===p.id?'chosen':''}" data-tilt data-prompt="${esc(p.id)}" aria-pressed="${selected===p.id}"><span class="prompt-icon" aria-hidden="true">${esc(p.icon||'✦')}</span><span class="prompt-number">0${i+1}</span><strong>${esc(p.title)}</strong><i aria-hidden="true">${selected===p.id?'✓':'↗'}</i></button>`).join('')}</div>
-  <form id="answer-form"><label for="trivia-answer">${esc(chosen?.title||'Choose a prompt above, then type your answer')}${chosen?.note?`<small class="prompt-note">${esc(chosen.note)}</small>`:''}</label><div class="input-row"><input id="trivia-answer" name="answer" value="${esc(drafts.get(draftKey(r))||'')}" required maxlength="100" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Your bright idea…" ${!selected?'disabled':''}><button class="primary" ${!selected||locked()?'disabled':''}>Use answer →</button></div></form>
+  <form id="answer-form"><label for="trivia-answer">${esc(chosen?.title||'Choose a prompt above, then type your answer')}${chosen?.note?`<small class="prompt-note">${esc(chosen.note)}</small>`:''}</label><div class="input-row"><input id="trivia-answer" name="answer" value="${esc(drafts.get(draftKey(r))||'')}" required maxlength="100" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Your bright idea…" ${!selected?'disabled':''}><button class="primary" ${!selected||locked()?'disabled':''}>Use answer →</button></div></form>${suggestionBox(r,'answer')}
   <div class="panel-foot"><button class="text-button" data-move="skip-answer" ${disabled}>Skip this round · 0 points</button>${!inTutorial?'<button class="text-button" data-report>Missing an answer?</button>':''}</div>`;
  }
  if(r.phase==='probe'){
@@ -121,8 +127,8 @@ function panel(r){
  const message=last.result==='hit'?`${last.letter} caught a breeze! +${last.bonus||RULES.hit}`:last.result==='miss'?`No ${last.letter}. A little turbulence.`:last.result==='echo'?'An echo from a familiar sky.':'A quiet glide. No Fuel used.';
  return `<span class="eyebrow">${final?'THE FINAL APPROACH':'A LITTLE CLOSER'}</span><h2>${esc(message)}</h2><p>${final?'Five rounds flown. Try the full answer, or land with your banked points.':last.result==='miss'?'One Fuel used. Try the full answer, or keep gathering letters.':'See the connection? Guess now, or catch the next round.'}</p>
  ${r.lastGuess?`<p class="guess-feedback" role="status">“${esc(r.lastGuess)}” wasn’t the answer. −${RULES.wrongCost} Fuel. ${plural(RULES.guesses-r.wrong,'guess')} left.</p>`:''}
- ${r.wrong<RULES.guesses?`<form id="solve-form"><label for="solve-answer">The hidden answer · ${RULES.guesses-r.wrong} guesses left</label><div class="input-row"><input id="solve-answer" name="answer" value="${esc(drafts.get(draftKey(r))||'')}" required maxlength="100" placeholder="That lightbulb moment…" autocomplete="off"><button class="primary" ${disabled}>Try to solve</button><button type="button" class="secondary skip-guess" data-move="${final?'finish':'next'}" ${disabled}>Skip guess ${final?'& finish':'→'}</button></div><small>A wrong guess costs ${RULES.wrongCost} Fuel. Solving now banks ${RULES.perRound} for each unused round${r.wrong?'':` and +${RULES.clean} for a first-guess solve`}.</small></form>`:'<p>All three guesses used. You can still earn trivia points.</p>'}
- <div class="panel-foot"><button class="secondary next-round" data-move="${final?'finish':'next'}" ${disabled}>${final?'Finish & reveal':'Next round →'}</button>${!inTutorial?'<button class="text-button" data-report>Report a problem</button>':''}</div>`;
+ ${r.wrong<RULES.guesses?`<form id="solve-form"><label for="solve-answer">The hidden answer · ${RULES.guesses-r.wrong} guesses left</label><div class="input-row"><input id="solve-answer" name="answer" value="${esc(drafts.get(draftKey(r))||'')}" required maxlength="100" placeholder="That lightbulb moment…" autocomplete="off"><button class="primary" ${disabled}>Try to solve</button></div><small>A wrong guess costs ${RULES.wrongCost} Fuel. Solving now banks ${RULES.perRound} for each unused round${r.wrong?'':` and +${RULES.clean} for a first-guess solve`}.</small></form>`:'<p>All three guesses used. You can still earn trivia points.</p>'}
+ ${suggestionBox(r,'solve')}<div class="panel-foot"><button class="secondary next-round" data-move="${final?'finish':'next'}" ${disabled}>${final?'Finish & reveal':'Next round →'}</button>${!inTutorial?'<button class="text-button" data-report>Report a problem</button>':''}</div>`;
 }
 const clock=seconds=>seconds<60?`${seconds}s`:`${Math.floor(seconds/60)}m ${String(seconds%60).padStart(2,'0')}s`;
 function result(r){
@@ -163,6 +169,9 @@ function play(r){
 }
 function render(){
  const run=inGame?activeRun():null;trackQuick(run);
+ if(suggestion&&(!run||run.id!==suggestion.runId||run.revision!==suggestion.revision))suggestion=null;
+ // Finish/revert owned control tweens before patching their styles; never restart them on a save acknowledgement.
+ clearControlMotion();
  root.setAttribute('aria-busy',String(busy&&!inTutorial));patchHTML(root,run?play(run):welcome());
  document.querySelector('#account-open').textContent=data?.signedIn?'Your account':'Sign in';syncCinema(run);
  // A change of screen (launchpad, flight, result) gets one entrance; steps inside a flight are handled by feedback().
@@ -177,19 +186,19 @@ function rememberView(){try{sessionStorage.setItem('hd-view',inTutorial?'tutoria
 function focusStep(){const heading=root.querySelector('.action-panel h2,.result h2');if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true});}}
 async function perform(route,body={},retry=false){
  if(busy)return;if(route==='start'&&!body.requestId)body.requestId=uid();const epoch=++requestEpoch,before=data?.run,snapshot=data;let optimistic=false;
- busy=true;error='';disarmHint();if(!retry)pending={route,body:{...body}};
+ busy=true;error='';suggestion=null;disarmHint();if(!retry)pending={route,body:{...body}};
  // Only the already-published prompt titles are predicted. Points, probes, hints and
  // guesses ALWAYS wait for the server. Typing can begin while Next is saved.
  if(route==='move'&&body.action==='next'&&before?.nextPrompts?.length){optimistic=true;data={...data,run:{...before,phase:'answer',round:before.round+1,prompts:before.nextPrompts,nextPrompts:[],lastGuess:null}};selected='';trackQuick(data.run,true);}
  render();if(optimistic)feedback(before,data.run,'next');
  try{
   const result=await api(route,body);if(epoch!==requestEpoch)return;data=result;pending=null;if(!optimistic)selected='';shareText='';inGame=true;rememberView();
- }catch(e){if(epoch!==requestEpoch)return;if(optimistic){data=snapshot;selected='';}error=e.message;if(e.status){pending=null;if(e.status===409){try{data=await api('state');selected='';}catch{}}}else error='Connection interrupted. Retry to confirm and safely save the same move.';}
- finally{if(epoch===requestEpoch){busy=false;render();if(error)invalid();else{feedback(before?.id===data?.run?.id?before:null,data?.run,body.action);if(!optimistic)focusStep();}}}
+ }catch(e){if(epoch!==requestEpoch)return;if(optimistic){data=snapshot;selected='';}if(!suggestMatch(e,before,body))error=e.message;if(e.status){pending=null;if(e.status===409){try{data=await api('state');selected='';}catch{}}}else error='Connection interrupted. Retry to confirm and safely save the same move.';}
+ finally{if(epoch===requestEpoch){busy=false;render();if(suggestion)root.querySelector('[data-confirm-answer]')?.focus();else if(error)invalid();else{feedback(before?.id===data?.run?.id?before:null,data?.run,body.action);if(!optimistic)focusStep();}}}
 }
 function startTutorial(){if(busy&&inGame&&!inTutorial)return;inTutorial=true;tutorial=createTutorial();selected='';pending=null;error='';shareText='';inGame=true;disarmHint();rememberView();render();focusStep();}
 function move(action,extra={}){
- if(inTutorial){const before=tutorial;disarmHint();try{tutorial=tutorialMove(tutorial,action,extra.value,extra.prompt);error='';selected='';rememberView();render();feedback(before,tutorial,action);if(action!=='hint')focusStep();}catch(e){error=e.message;render();invalid();}return;}
+ if(inTutorial){const before=tutorial;suggestion=null;disarmHint();try{tutorial=tutorialMove(tutorial,action,extra.value,extra.prompt);error='';selected='';rememberView();render();feedback(before,tutorial,action);if(action!=='hint')focusStep();}catch(e){if(!suggestMatch(e,before,{action,...extra}))error=e.message;render();if(suggestion)root.querySelector('[data-confirm-answer]')?.focus();else invalid();}return;}
  if(locked())return;return perform('move',{action,...extra,runId:data.run.id,revision:data.run.revision,requestId:uid()});
 }
 async function account(){
@@ -202,11 +211,13 @@ document.addEventListener('keydown',e=>{
  if(!run||run.phase!=='probe'||!run.available?.includes(letter))return;
  const button=root.querySelector(`[data-probe="${letter}"]:not(:disabled)`);if(button){e.preventDefault();e.stopImmediatePropagation();button.click();}
 });
-document.addEventListener('input',e=>{if(['trivia-answer','solve-answer'].includes(e.target.id)&&activeRun())drafts.set(draftKey(activeRun()),e.target.value);});
+document.addEventListener('input',e=>{if(['trivia-answer','solve-answer'].includes(e.target.id)&&activeRun()){drafts.set(draftKey(activeRun()),e.target.value);if(suggestion){suggestion=null;root.querySelector('.answer-suggestion')?.remove();}}});
 document.addEventListener('click',async e=>{
  const el=e.target.closest('button,a[data-home]');if(!el)return;
  if(el.hasAttribute('data-close')){el.closest('dialog').close();return;}
  if(el.id==='account-open'||el.hasAttribute('data-account'))return account();
+ if(el.hasAttribute('data-confirm-answer')){const choice=suggestion,r=activeRun();if(!choice||locked())return;if(!r||r.id!==choice.runId||r.revision!==choice.revision){suggestion=null;render();return;}return move(choice.action,{value:choice.word,...(choice.prompt?{prompt:choice.prompt}:{})});}
+ if(el.hasAttribute('data-edit-answer')){const action=suggestion?.action;suggestion=null;render();root.querySelector(action==='solve'?'#solve-answer':'#trivia-answer')?.focus({preventScroll:true});return;}
  if(el.dataset.hint==='arm'){hintArmed=true;clearTimeout(hintTimer);hintTimer=setTimeout(()=>{hintArmed=false;render();},5000);render();root.querySelector('[data-hint="confirm"]')?.focus({preventScroll:true});return;}
  if(el.dataset.hint==='confirm'){press(el);return move('hint');}
  if(hintArmed){disarmHint();render();}
@@ -215,7 +226,7 @@ document.addEventListener('click',async e=>{
  if(el.hasAttribute('data-refresh'))return load();
  if(el.hasAttribute('data-retry')&&pending)return perform(pending.route,pending.body,true);
  if(el.dataset.start){if(busy)return;inTutorial=false;mode=el.dataset.start;selected='';pending=null;press(el);return perform('start');}
- if(el.dataset.prompt){selected=el.dataset.prompt;render();selectPrompt(root.querySelector(`[data-prompt="${selected}"]`));document.querySelector('#trivia-answer').focus();return;}
+ if(el.dataset.prompt){suggestion=null;selected=el.dataset.prompt;render();selectPrompt(root.querySelector(`[data-prompt="${selected}"]`));document.querySelector('#trivia-answer').focus({preventScroll:true});return;}
  if(el.dataset.probe){launchLetter(el);sending(el);return move('probe',{value:el.dataset.probe});}
  if(el.dataset.move){press(el);return move(el.dataset.move);}
  if(el.hasAttribute('data-report')){document.querySelector('#report-dialog').showModal();return;}

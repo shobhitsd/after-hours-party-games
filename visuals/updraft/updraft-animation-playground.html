@@ -180,6 +180,45 @@
  .daily-button{padding:10px 13px}
 }
 @media(max-width:360px){.hint-button{padding:6px 11px;font-size:12px}.quick-meter small{font-size:10px}}
+
+/* A small, non-sticky sky leaves the flight deck in charge on phones. */
+.answer-suggestion{margin:16px 0;padding:16px;border:1px solid #c7dcd6;border-radius:14px;background:#f0f8f3}
+.answer-suggestion p{margin:0 0 8px}.answer-suggestion>div{display:flex;flex-wrap:wrap;gap:8px}.answer-suggestion button{min-height:44px}
+@media(max-width:760px){
+ .ud-gsap .ud-shell[data-playing="true"] .ud-scene{height:210px;position:relative;top:0;z-index:auto}
+ .ud-gsap .ud-shell[data-playing="true"] .ud-balloon-position,.ud-gsap .ud-shell[data-playing="true"] .ud-afterimages{width:90px;height:130px;top:12px;margin-left:-45px}
+ .ud-gsap .ud-shell[data-playing="true"] .ud-dialogue{top:47px;bottom:50px;min-height:0;padding:9px 11px}
+ .ud-gsap .ud-shell[data-playing="true"] .ud-dialogue>span{font-size:8px}
+ .ud-gsap .ud-shell[data-playing="true"] .ud-dialogue p{font-size:12px;line-height:1.35}
+ .ud-gsap .ud-shell[data-playing="true"] .ud-scene-heading{top:10px}
+ .ud-gsap .ud-shell[data-playing="true"] .ud-scene-tools{bottom:9px}
+ .ud-gsap .ud-shell[data-playing="true"] .ud-closeup{top:35px;bottom:48px}
+ .ud-gsap .ud-shell #game input,.ud-gsap .ud-shell #game button,.ud-gsap .ud-shell .action-panel{scroll-margin-top:16px}
+ .ud-shell .puzzle-panel{padding:16px}.ud-shell .hidden-words{margin:16px 0}
+ .ud-shell .tutorial-guide{padding:10px 12px;margin-block:12px}
+ .ud-shell .action-panel{padding:18px 16px}.ud-shell .action-panel h2{font-size:23px}
+ .ud-shell .action-panel .prompt{padding:12px;min-height:94px}
+ .ud-shell .action-panel .input-row{gap:9px}.ud-shell .action-panel input{font-size:16px}
+ /* Focus is useful even with a hardware keyboard; visualViewport keeps this through keyboard dismissal. */
+ .ud-input-active .ud-shell[data-playing="true"] .ud-scene{display:none}
+ .ud-input-active .nav,.ud-input-active footer,.ud-input-active .tutorial-guide,.ud-input-active .play-layout aside,.ud-input-active .play-heading{display:none}
+ .ud-input-active .ud-shell{padding-top:8px;gap:0}
+ .ud-input-active .puzzle-panel{position:sticky;top:0;z-index:8;padding:10px 12px;box-shadow:0 3px 10px #304d5810;background:#f1f3ed}
+ .ud-input-active .puzzle-top{gap:6px}.ud-input-active .puzzle-top p,.ud-input-active .puzzle-top small,.ud-input-active .puzzle-top .hint-button,.ud-input-active .altimeter{display:none}
+ .ud-input-active .puzzle-top strong{font-size:12px}.ud-input-active .score-chip{padding:3px 8px}.ud-input-active .score-chip strong{font-size:18px}
+ .ud-input-active .hidden-words{margin:10px 0;gap:5px}.ud-input-active .letter-tile{height:32px;min-height:32px;max-width:28px;font-size:16px}
+ .ud-input-active .puzzle-panel .round-track,.ud-input-active .puzzle-panel .flight-balloon,.ud-input-active .puzzle-panel .air{display:none}
+ .ud-input-active .action-panel{margin-top:12px;padding:12px}
+ .ud-input-active .action-panel h2{font-size:18px}.ud-input-active .action-panel>.panel-head+p{display:none}
+ .ud-input-active .action-panel .prompt-grid{gap:8px;margin-block:10px}
+ .ud-input-active .action-panel .prompt{min-height:56px;padding:8px;display:flex;align-items:center;gap:7px}
+ .ud-input-active .prompt strong{font-size:12px}.ud-input-active .prompt-icon{font-size:18px;width:24px;height:24px;flex:none;margin:0}
+ .ud-input-active .prompt-number,.ud-input-active .prompt>i,.ud-input-active .action-panel .quick-slot{display:none}
+ .ud-input-active .action-panel .input-row{display:flex;flex-wrap:wrap}.ud-input-active .action-panel input{flex:1 1 110px;min-width:0;width:100%;padding:12px}
+ .ud-input-active .action-panel .input-row>.primary{flex:0 0 auto;width:auto;padding:10px 12px;min-height:44px;font-size:13px}
+ .ud-input-active .panel-foot{margin-top:10px}.ud-input-active .action-panel>p{font-size:13px;margin-block:8px}
+ .answer-suggestion>div{flex-direction:column}.answer-suggestion button{width:100%}
+}
 </style><body><main id="game"><h1>Up<em>draft.</em></h1><p>A visual playground for Miri Quill. These buttons preview animations; they do not play a separate game or change scores.</p><div class="start-actions"><button class="secondary" data-preview="correct">correct</button><button class="secondary" data-preview="wrong">wrong</button><button class="secondary" data-preview="rare">rare</button><button class="secondary" data-preview="sky">sky</button><button class="secondary" data-preview="landing">landing</button><button class="secondary" data-preview="celebrate">celebrate</button><button class="secondary" data-preview="wave">wave</button></div><p>Open this file in a text editor. The CONFIG object at the top of the module script contains every timing, easing and intensity control. This file includes GSAP and SVG artwork and works offline without a build step.</p></main><script>(function(){
 /*!
  * GSAP 3.13.0
@@ -396,6 +435,7 @@ export class SceneDirector{
  constructor(game){
   this.game=game;this.actual=visualSnapshot(null);this.queue=[];this.seen=new Set();this.variant=0;this.lastGesture=0;this.playing=false;this.motion=true;
   this.media=matchMedia('(prefers-reduced-motion: reduce)');
+  this.mobile=matchMedia('(max-width:760px)');this.editing=false;
   this.shell=document.createElement('div');this.shell.className='ud-shell';game.before(this.shell);this.shell.append(game);this.shell.insertAdjacentHTML('beforeend',sceneArt());
   this.stage=this.shell.querySelector('.ud-scene');this.q=s=>this.stage.querySelector(s);this.balloon=new Balloon(this.stage);document.body.classList.add('ud-gsap');
   for(const svg of this.stage.querySelectorAll('.ud-balloon-svg')){
@@ -414,9 +454,25 @@ export class SceneDirector{
   document.addEventListener('keydown',event=>{if(event.key.toLowerCase()==='d'&&!event.ctrlKey&&!event.metaKey&&!event.altKey&&!event.target.closest('input,textarea,select,[contenteditable="true"]')){const panel=this.q('.ud-director');panel.hidden=!panel.hidden;panel.open=!panel.hidden;}});
   this.media.addEventListener('change',()=>{this.stop();clearControlMotion();this.motionUI();this.ambient();});
   document.addEventListener('visibilitychange',()=>{this.stop();clearControlMotion();this.motionUI();this.ambient();});
+  document.addEventListener('focusin',()=>this.editingUI());
+  document.addEventListener('focusout',()=>requestAnimationFrame(()=>this.editingUI()));
+  this.mobile.addEventListener('change',()=>this.editingUI());
+  window.visualViewport?.addEventListener('resize',()=>this.editingUI());
   this.motionUI();this.rest();this.ambient();
  }
- canMove(){return this.motion&&!this.media.matches&&!document.hidden;}
+ editingUI(){
+  const focused=document.activeElement?.matches('input:not([type="range"]),textarea,[contenteditable="true"]');
+  const keyboardVisible=window.visualViewport&&innerHeight-window.visualViewport.height>120;
+  // Keep the layout steady when focus moves from the input to Submit/Yes/Next.
+  // Expanding on pointer-down would move that button before pointer-up and swallow the tap.
+  const editorControl=this.editing&&document.activeElement?.closest('.action-panel');
+  const editing=this.mobile.matches&&Boolean(focused||editorControl||(this.editing&&keyboardVisible));
+  // The keyboard can resize the viewport after focus. Keep the active field above it on each resize.
+  if(editing&&focused)requestAnimationFrame(()=>document.activeElement?.scrollIntoView?.({block:'nearest',behavior:'instant'}));
+  if(editing===this.editing)return;this.editing=editing;document.body.classList.toggle('ud-input-active',editing);
+  this.stop();clearControlMotion();this.motionUI();this.ambient();
+ }
+ canMove(){return this.motion&&!this.media.matches&&!document.hidden&&!this.editing;}
  motionUI(){this.stage.dataset.motion=this.canMove()?'on':'off';const button=this.q('[data-ud-motion]');button.textContent=this.media.matches?'Reduced motion':this.motion?'Motion on':'Motion off';button.setAttribute('aria-pressed',String(this.canMove()));button.setAttribute('aria-label',this.motion?'Turn cinematic motion off':'Turn cinematic motion on');}
  line(event){return CONFIG.lines[event.detail==='hit'?'hit':event.kind==='landing'&&event.snapshot.solved?'solved':event.kind]||CONFIG.lines.welcome;}
  palette(index){const sky=CONFIG.skies[index]||CONFIG.skies[0];this.q('.ud-sky-current').style.background=`linear-gradient(155deg,${sky.colors.join(',')})`;this.stage.dataset.sky=String(index);this.q('.ud-sky-name').textContent=sky.name;}
@@ -473,7 +529,7 @@ export class SceneDirector{
    tl.to({clock:0},{clock:1,duration:d,ease:CONFIG.ease.linear},0);tl.timeScale(CONFIG.speed).play();
   },this.stage);
  }
- sync(run){const next=visualSnapshot(run),changed=this.actual.id!==next.id;this.actual=next;this.shell.dataset.playing=String(Boolean(run));if(changed){this.stop();clearControlMotion();this.q('.ud-line').textContent=CONFIG.lines[next.solved?'solved':'welcome'];}else if(!this.playing)this.rest();this.ambient();}
+ sync(run){this.editingUI();const next=visualSnapshot(run),changed=this.actual.id!==next.id;this.actual=next;this.shell.dataset.playing=String(Boolean(run));if(changed){this.stop();clearControlMotion();this.q('.ud-line').textContent=CONFIG.lines[next.solved?'solved':'welcome'];}else if(!this.playing)this.rest();this.ambient();}
  feedback(before,after,action){
   const events=visualEvents(before,after,action).filter(event=>!this.seen.has(event.key));
   if(!events.length){if(before?.id===after?.id&&after?.revision>before?.revision&&['next','skip-probe','skip-answer','hint'].includes(action)){this.stop();if(action==='hint')this.q('.ud-line').textContent=CONFIG.lines.hint;this.gesture(action==='hint'?'ponder':'ready');}return;}
@@ -614,17 +670,15 @@ export function stageEnter(root,kind){
  });
 }
 // The step card tips in from above and its contents rise in sequence.
+const enteredPanels=new WeakSet();
 function dealPanel(tl,panel,at=0){
- if(!panel)return;
- tl.fromTo(panel,{rotationX:-11,y:DECK.rise,opacity:0,transformPerspective:DECK.perspective,transformOrigin:'50% 0%'},{rotationX:0,y:0,opacity:1,duration:DECK.enter,ease:CONFIG.ease.rise},at);
- const parts=[...panel.children].filter(el=>!el.matches('.prompt-grid,.probe-letters'));
- tl.fromTo(parts,{y:DECK.rise*.6,opacity:0},{y:0,opacity:1,duration:DECK.enter*.8,ease:CONFIG.ease.out,stagger:DECK.stagger*.8},at+DECK.enter*.25);
- // Two prompt cards swing in like opening doors; launch keys flip up like keycaps.
- panel.querySelectorAll('.prompt').forEach((card,i)=>tl.fromTo(card,{rotationY:i?-38:38,x:i?40:-40,opacity:0,transformPerspective:DECK.perspective},{rotationY:0,x:0,opacity:1,duration:DECK.enter*1.15,ease:CONFIG.ease.rebound},at+DECK.enter*.3+i*DECK.stagger));
- tl.fromTo(panel.querySelectorAll('.probe-letters button'),{rotationX:95,y:18,opacity:0,transformPerspective:DECK.tilePerspective,transformOrigin:'50% 100%'},{rotationX:0,y:0,opacity:1,duration:DECK.flip*.75,ease:CONFIG.ease.rebound,stagger:DECK.tileStagger*1.4},at+DECK.enter*.35);
- const banner=panel.querySelector('.rarity-banner');if(banner)tl.fromTo(banner,{scale:1.18,rotationX:28,transformPerspective:DECK.perspective},{scale:1,rotationX:0,duration:DECK.enter,ease:CONFIG.ease.rebound},at+DECK.enter*.2);
+ if(!panel||enteredPanels.has(panel))return;enteredPanels.add(panel);
+ // Keep controls visible throughout. A save acknowledgement must never deal the same cards twice.
+ tl.fromTo(panel,{y:DECK.rise*.25},{y:0,duration:DECK.enter*.65,ease:CONFIG.ease.out},at);
+ panel.querySelectorAll('.prompt').forEach((card,i)=>tl.fromTo(card,{rotationY:i?-6:6,y:4,transformPerspective:DECK.perspective},{rotationY:0,y:0,duration:DECK.enter*.65,ease:CONFIG.ease.out},at));
+ tl.fromTo(panel.querySelectorAll('.probe-letters button'),{y:6},{y:0,duration:DECK.flip*.5,ease:CONFIG.ease.out,stagger:DECK.tileStagger},at);
 }
-export function stepEnter(panel){if(panel)controlSequence(tl=>dealPanel(tl,panel));}
+export function stepEnter(panel){if(panel&&!enteredPanels.has(panel))controlSequence(tl=>dealPanel(tl,panel));}
 // A revealed tile turns over on its horizontal axis and hops; later tiles follow in a wave.
 export function flipTiles(tiles){
  tiles.forEach((tile,order)=>{

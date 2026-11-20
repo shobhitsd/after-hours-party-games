@@ -121,7 +121,7 @@ test('no zero-round solves, forged prompt/letter, duplicate answer, stale move o
 });
 test('forgiving matching: accents, aliases, a leading "The", plurals, one unambiguous typo; exact short words',()=>{
  const r=newRun(classic(),'practice',now);answer(r,'fruit','Pápaya');assert.equal(r.history[0].answer,'Papaya');
- const typo=newRun(classic(),'practice',now);answer(typo,'fruit','Pappaya');assert.equal(typo.history[0].answer,'Papaya');
+ const typo=newRun(classic(),'practice',now);assert.throws(()=>answer(typo,'fruit','Pappaya'),{code:'ANSWER_CONFIRMATION_REQUIRED',suggestion:{word:'Papaya'}});assert.equal(typo.history.length,0);answer(typo,'fruit','Papaya');assert.equal(typo.history[0].answer,'Papaya');
  assert.equal(matchAnswer(promptById('vegetable'),'Courgette').word,'Zucchini');assert.equal(matchAnswer(promptById('vegetable'),'aubergine').word,matchAnswer(promptById('vegetable'),'Eggplant').word);
  assert.equal(matchAnswer(promptById('fruit'),'apples').word,'Apple');assert.equal(matchAnswer(promptById('fruit'),'CHERRIES').word,'Cherry');assert.equal(matchAnswer(promptById('fruit'),'  the mango ').word,'Mango');
  assert.equal(matchAnswer(promptById('country'),'usa').word,matchAnswer(promptById('country'),'United States').word);
@@ -146,6 +146,27 @@ test('forgiving matching: accents, aliases, a leading "The", plurals, one unambi
  assert.equal(matchAnswer(promptById('drink'),'cappucino').word,'Cappuccino');
  assert.equal(matchAnswer(promptById('fruit'),'avacado').word,'Avocado');
 });
+test('typo confirmation: Miami suggestion is read-only; canonical resubmit is validated, timed and idempotent',()=>{
+ const r=newRun(classic(),'practice',now);r.puzzle.rounds[0][0]=promptById('city');
+ const before=structuredClone(r);
+ assert.throws(()=>answer(r,'city','maimi',now+9000),{status:422,code:'ANSWER_CONFIRMATION_REQUIRED',suggestion:{word:'Miami'}});
+ assert.deepEqual(r,before,'no score, Fuel, revision, history, clock or receipt changes before Yes');
+ assert.throws(()=>move(r,'answer',{prompt:'city',value:'maimi',confirmed:true},now+11000),{code:'ANSWER_CONFIRMATION_REQUIRED'});
+ const yes={runId:r.id,revision:r.revision,requestId:randomUUID(),action:'answer',prompt:'city',value:'Miami'};
+ applyMove(r,yes,now+15000);assert.equal(r.history[0].answer,'Miami');assert.equal(r.quick,6,'confirmation does not reset the quick window');
+ const confirmed=structuredClone(r);applyMove(r,yes,now+18000);assert.deepEqual(r,confirmed,'retries cannot award twice');
+ assert.throws(()=>applyMove(r,{...yes,requestId:randomUUID()},now+18000),{status:409});
+});
+
+test('service: a suggested answer is not persisted until the canonical answer is confirmed',async()=>{
+ const puzzle=classic();puzzle.rounds[0][0]=promptById('city');
+ const f=await fixture({library:[puzzle]}),c=f.client();const initial=await f.call(c,'start');
+ const body={runId:initial.run.id,revision:initial.run.revision,requestId:randomUUID(),action:'answer',prompt:'city',value:'maimi'};
+ await assert.rejects(f.call(c,'move',body),{code:'ANSWER_CONFIRMATION_REQUIRED',suggestion:{word:'Miami'}});
+ assert.deepEqual((await f.call(c,'state')).run,initial.run);
+ const confirmed=await f.call(c,'move',{...body,requestId:randomUUID(),value:'Miami'});assert.equal(confirmed.run.history[0].answer,'Miami');assert.equal(confirmed.run.revision,1);
+});
+
 test('echo, skips and final remaining guesses preserve the exact scoring and Fuel rules',()=>{
  const r=newRun(classic(),'practice',now);r.tested=['P','E','A','C','H'];answer(r,'fruit','Peach');assert.equal(r.phase,'decision');assert.equal(r.history[0].result,'echo');assert.equal(r.rarity,points('fruit','Peach'));assert.equal(r.air,6);
  next(r);move(r,'skip-answer');assert.equal(r.rarity,points('fruit','Peach'));assert.equal(r.air,6);
@@ -156,7 +177,8 @@ test('echo, skips and final remaining guesses preserve the exact scoring and Fue
  const second=newRun(classic(),'practice',now);answer(second,'fruit','Apple');move(second,'skip-probe');move(second,'solve',{value:'Nope'});move(second,'solve',{value:'Machu Picchu'});
  assert.deepEqual(second.parts,solveParts({air:4,rounds:1,wrong:1,activeMs:0}));assert.equal(second.parts.clean,0);
  const fuzzySolve=newRun(classic(),'practice',now);answer(fuzzySolve,'fruit','Apple');move(fuzzySolve,'skip-probe');
- move(fuzzySolve,'solve',{value:'Machu Pichu'});assert.equal(fuzzySolve.status,'solved');
+ const before=structuredClone(fuzzySolve);assert.throws(()=>move(fuzzySolve,'solve',{value:'Machu Pichu'}),{code:'ANSWER_CONFIRMATION_REQUIRED',suggestion:{word:'Machu Picchu'}});assert.deepEqual(fuzzySolve,before);
+ move(fuzzySolve,'solve',{value:'Machu Picchu'});assert.equal(fuzzySolve.status,'solved');
 });
 test('five misses leave one Fuel; a wrong final guess floors to zero and keeps banked points',()=>{
  const r=newRun(classic(),'practice',now);

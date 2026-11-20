@@ -8,6 +8,7 @@ export class SceneDirector{
  constructor(game){
   this.game=game;this.actual=visualSnapshot(null);this.queue=[];this.seen=new Set();this.variant=0;this.lastGesture=0;this.playing=false;this.motion=true;
   this.media=matchMedia('(prefers-reduced-motion: reduce)');
+  this.mobile=matchMedia('(max-width:760px)');this.editing=false;
   this.shell=document.createElement('div');this.shell.className='ud-shell';game.before(this.shell);this.shell.append(game);this.shell.insertAdjacentHTML('beforeend',sceneArt());
   this.stage=this.shell.querySelector('.ud-scene');this.q=s=>this.stage.querySelector(s);this.balloon=new Balloon(this.stage);document.body.classList.add('ud-gsap');
   for(const svg of this.stage.querySelectorAll('.ud-balloon-svg')){
@@ -26,9 +27,25 @@ export class SceneDirector{
   document.addEventListener('keydown',event=>{if(event.key.toLowerCase()==='d'&&!event.ctrlKey&&!event.metaKey&&!event.altKey&&!event.target.closest('input,textarea,select,[contenteditable="true"]')){const panel=this.q('.ud-director');panel.hidden=!panel.hidden;panel.open=!panel.hidden;}});
   this.media.addEventListener('change',()=>{this.stop();clearControlMotion();this.motionUI();this.ambient();});
   document.addEventListener('visibilitychange',()=>{this.stop();clearControlMotion();this.motionUI();this.ambient();});
+  document.addEventListener('focusin',()=>this.editingUI());
+  document.addEventListener('focusout',()=>requestAnimationFrame(()=>this.editingUI()));
+  this.mobile.addEventListener('change',()=>this.editingUI());
+  window.visualViewport?.addEventListener('resize',()=>this.editingUI());
   this.motionUI();this.rest();this.ambient();
  }
- canMove(){return this.motion&&!this.media.matches&&!document.hidden;}
+ editingUI(){
+  const focused=document.activeElement?.matches('input:not([type="range"]),textarea,[contenteditable="true"]');
+  const keyboardVisible=window.visualViewport&&innerHeight-window.visualViewport.height>120;
+  // Keep the layout steady when focus moves from the input to Submit/Yes/Next.
+  // Expanding on pointer-down would move that button before pointer-up and swallow the tap.
+  const editorControl=this.editing&&document.activeElement?.closest('.action-panel');
+  const editing=this.mobile.matches&&Boolean(focused||editorControl||(this.editing&&keyboardVisible));
+  // The keyboard can resize the viewport after focus. Keep the active field above it on each resize.
+  if(editing&&focused)requestAnimationFrame(()=>document.activeElement?.scrollIntoView?.({block:'nearest',behavior:'instant'}));
+  if(editing===this.editing)return;this.editing=editing;document.body.classList.toggle('ud-input-active',editing);
+  this.stop();clearControlMotion();this.motionUI();this.ambient();
+ }
+ canMove(){return this.motion&&!this.media.matches&&!document.hidden&&!this.editing;}
  motionUI(){this.stage.dataset.motion=this.canMove()?'on':'off';const button=this.q('[data-ud-motion]');button.textContent=this.media.matches?'Reduced motion':this.motion?'Motion on':'Motion off';button.setAttribute('aria-pressed',String(this.canMove()));button.setAttribute('aria-label',this.motion?'Turn cinematic motion off':'Turn cinematic motion on');}
  line(event){return CONFIG.lines[event.detail==='hit'?'hit':event.kind==='landing'&&event.snapshot.solved?'solved':event.kind]||CONFIG.lines.welcome;}
  palette(index){const sky=CONFIG.skies[index]||CONFIG.skies[0];this.q('.ud-sky-current').style.background=`linear-gradient(155deg,${sky.colors.join(',')})`;this.stage.dataset.sky=String(index);this.q('.ud-sky-name').textContent=sky.name;}
@@ -85,7 +102,7 @@ export class SceneDirector{
    tl.to({clock:0},{clock:1,duration:d,ease:CONFIG.ease.linear},0);tl.timeScale(CONFIG.speed).play();
   },this.stage);
  }
- sync(run){const next=visualSnapshot(run),changed=this.actual.id!==next.id;this.actual=next;this.shell.dataset.playing=String(Boolean(run));if(changed){this.stop();clearControlMotion();this.q('.ud-line').textContent=CONFIG.lines[next.solved?'solved':'welcome'];}else if(!this.playing)this.rest();this.ambient();}
+ sync(run){this.editingUI();const next=visualSnapshot(run),changed=this.actual.id!==next.id;this.actual=next;this.shell.dataset.playing=String(Boolean(run));if(changed){this.stop();clearControlMotion();this.q('.ud-line').textContent=CONFIG.lines[next.solved?'solved':'welcome'];}else if(!this.playing)this.rest();this.ambient();}
  feedback(before,after,action){
   const events=visualEvents(before,after,action).filter(event=>!this.seen.has(event.key));
   if(!events.length){if(before?.id===after?.id&&after?.revision>before?.revision&&['next','skip-probe','skip-answer','hint'].includes(action)){this.stop();if(action==='hint')this.q('.ud-line').textContent=CONFIG.lines.hint;this.gesture(action==='hint'?'ponder':'ready');}return;}
