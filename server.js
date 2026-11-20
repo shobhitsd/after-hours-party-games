@@ -184,6 +184,7 @@ export async function handleRequest(req,res){
      '/updraft.js':'public/updraft.js',
      '/updraft.css':'public/updraft.css',
      '/updraft-tutorial.js':'public/updraft-tutorial.js',
+     '/updraft-rules.js':'public/updraft-rules.js',
      '/updraft-motion.js':'public/updraft-motion.js',
      '/hidden-depths':'public/hidden-depths.html',
      '/hidden-depths.html':'public/hidden-depths.html',

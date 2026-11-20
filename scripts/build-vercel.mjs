@@ -11,7 +11,7 @@ const fn=path.join(output,'functions/api/index.func');
 await mkdir(fn,{recursive:true});
 await cp(path.join(root,'public'),path.join(output,'static'),{recursive:true});
 // The backend uses only built-ins. Copy an explicit source allowlist, never .env or credentials.
-for(const file of ['server.js','engine.js','data.js','bots.js','variety.js','packed.js','packed-content.js','api/index.js','public/packed-proof.js',...(await readdir(path.join(root,'lib'))).filter(n=>n.endsWith('.js')).map(n=>'lib/'+n)]){
+for(const file of ['server.js','engine.js','data.js','bots.js','variety.js','packed.js','packed-content.js','api/index.js','public/packed-proof.js','public/updraft-rules.js',...(await readdir(path.join(root,'lib'))).filter(n=>n.endsWith('.js')).map(n=>'lib/'+n),...(await readdir(path.join(root,'lib/updraft-bank'))).filter(n=>n.endsWith('.js')).map(n=>'lib/updraft-bank/'+n)]){
  const target=path.join(fn,file);await mkdir(path.dirname(target),{recursive:true});await cp(path.join(root,file),target);
 }
 await writeFile(path.join(fn,'package.json'),JSON.stringify({type:'module',private:true}));

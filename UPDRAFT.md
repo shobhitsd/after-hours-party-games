@@ -1,23 +1,42 @@
 # Updraft - rules and implementation
 
-Implemented 17 November 2026. Route: `/updraft`.
+Implemented 17 November 2026; expanded 20 November 2026. Route: `/updraft`.
 
 This is a solo game alongside the six existing party games. It does not create a multiplayer room. The homepage has a separate solo entry.
 
 ## Rules in this version
 
-- Five rounds, each offering two trivia prompts. Choose one and submit an answer.
-- An accepted answer banks 5 / 10 / 20 / 40 points. The tiers are editorial launch values, **not measured player frequencies**.
-- Test one unused letter from that answer. Every occurrence is revealed. A miss costs 1 Fuel. Start with 6 Fuel.
-- An answer cannot be reused, including supported aliases. An echo banks points without a probe. Skipping an answer gives no points; skipping a probe keeps the banked points. Neither skip costs Fuel.
+- Five rounds. Each round offers two prompts: one **everyday** prompt (Name a fruit, Name a colour…) and one **specialist** prompt (Name an NBA player, Name a Bollywood movie…). Choose one and type any answer you can think of.
+- An accepted answer banks 5 / 10 / 20 / 40 points by rarity tier. The tiers are editorial, **not measured player frequencies**.
+- Test one unused letter from that answer. Every occurrence is revealed and a hit earns +5. A miss costs 1 Fuel. Start with 6 Fuel.
+- An answer cannot be reused, including its aliases. An echo banks points without a probe. Skipping an answer gives no points; skipping a probe keeps the banked points. Neither skip costs Fuel.
+- **Hint.** Beside the mystery: first a written clue for 1 Fuel, then one revealed letter (the most frequent unrevealed one) for 2 Fuel. The button asks for a second tap before spending. A hint can never use your last Fuel. Hints are available while answering, launching or deciding.
 - Between rounds, try to solve the hidden answer. A wrong guess costs 2 Fuel. At most three wrong guesses. No solve before the first round.
-- A solve earns `100 + 20 × remaining Fuel + 50 × unused rounds`. Maximum score: 460. Early solving is preferable to delaying just to collect another 40-point answer.
-- At zero Fuel, the run ends and retains trivia points. After round five, solve, use the remaining guesses, or finish and reveal. Explicitly abandoning also counts as seeing that puzzle.
-- No countdown in this prototype. An attempt can resume for 24 hours from creation. A server timestamp controls expiry.
-- Normalization ignores case, spaces, punctuation and accents. Full solves ignore a leading “the”, accept listed aliases and a single typo for targets of at least eight letters. Trivia accepts exact entries/aliases; one-edit corrections require at least five submitted letters and exactly one matching dictionary entry. Short words require exact spelling.
-- No automatic solve merely from revealing every letter. There is no public leaderboard or paid scoring advantage.
+- At zero Fuel, the run ends and keeps everything banked. After round five, solve, use the remaining guesses, or finish and reveal. Abandoning also counts as seeing that puzzle.
+- No countdown ever ends a flight. An attempt can resume for 24 hours from creation. A server timestamp controls expiry and every timing bonus.
 
-Worked example: Papaya/P, Chile/E, Hornbill/H, Cucumber/C against Machu Picchu gives 45 trivia points, 5 Fuel, 1 unused round, a 250-point solve bonus, and **295 total**.
+### Scoring (maximum 600)
+
+All scoring lives in `public/updraft-rules.js`, imported by the server engine (authoritative), the offline tutorial and the UI text, so they cannot drift apart.
+
+| Component | Points |
+| --- | --- |
+| Trivia answer | common 5 · uncommon 10 · rare 20 · deep cut 40 |
+| Quick answer | +10 within 10 s of the prompt appearing · +6 within 20 s · +3 within 30 s |
+| Letter hit | +5 for each launched letter that is in the answer |
+| Solve | 100 + 20 × Fuel left + 60 × unused rounds |
+| Swift flight | up to +60: full under 60 s of active play, fading linearly to 0 at 5 minutes |
+| First-guess solve | +25 when the first guess is right |
+
+- The quick window starts when the server deals the prompt (flight start or Next round). A rejected answer does not restart it.
+- Active play time adds the gap between consecutive accepted moves, capped at 90 s per gap, so leaving a flight open overnight costs one capped pause. Failed moves record no time.
+- Time only ever adds bonuses; it never subtracts. The tutorial is untimed and awards no quick or swift bonus, so its score is always reproducible.
+- An unused round (60) is worth more than the best possible extra round (40 + 10 + 5), so solving early is always right.
+- The result itemises every component, shows a 0–5 star rating (solved: 2 stars, +1 each at 300, 400 and 500; unsolved with 50+ points: 1 star) and play time, letter accuracy and hints used.
+
+Normalization ignores case, accents, spaces and punctuation; “&” and a free-standing “+” read as “and”; a “+” or “#” attached to a word is spoken, so C++, C# and Disney+ equal “C plus plus”, “C sharp” and “Disney plus”. Digits are kept (“3 Idiots”), and digit-only titles such as 1917, 300, 2.0 or 96 are valid answers (they bank points as an echo, since they have no letters to launch). An alias may be a single letter, matched exactly (“C”, “R”, “X”). Trivia answers accept listed entries and aliases, an optional leading “The”, simple plurals/singulars, and one typo for answers of five or more letters when exactly one entry fits. On people prompts, a surname alone is accepted when exactly one listed person has it. Full solves ignore a leading “the”, accept listed alternatives, and allow a single typo for targets of at least eight letters. Revealing every letter never solves automatically.
+
+Worked example (Machu Picchu, every answer within ten seconds): Papaya/P, Chile/E, Hornbill/H, Cucumber/C bank their rarity points, +40 quick, +15 for three hits; E misses (5 Fuel). Solving after 42 s of play earns 100 + 100 + 60 + 60 swift + 25 first-guess = 345. The engine test asserts every figure.
 
 ## Free guests and account progress
 
@@ -27,17 +46,27 @@ Signed-in identity comes only from Supabase token verification, never a client-s
 
 Practice is free. Signed-in users also get one personal daily assignment per UTC date (reset at 05:30 India time; UI displays the next reset locally). This is a random unseen puzzle for that account, not a shared global daily answer. An active flight must be completed/abandoned/expired before another of the same mode starts. Finishing a daily does not grant another daily that day. Practice and daily share canonical-answer history. Assignment marks an answer as seen immediately, including abandoned attempts.
 
-At starter-library exhaustion, the game explains that there is no unseen puzzle left. It does not silently repeat an answer. The last 20 result summaries are displayed; storage retains 100 summaries and full current practice/daily runs. Old complete solutions are not an archive feature in this first version.
+The last 20 result summaries are displayed; storage retains 100 summaries and full current practice/daily runs. Old complete solutions are not an archive feature in this first version.
+
+
+### Daily return: streaks, ranks and records
+
+- **Streak.** Consecutive UTC days on which at least one flight was flown to its end (solved, out of Fuel, or revealed after round five). An abandoned flight does not count. A streak survives until the end of the day after the last flight.
+- **Pilot rank.** Lifetime points: Fledgling, Sky Cadet (300), Cloud Hopper (1,000), Thermal Rider (2,500), Jetstream Ace (5,000), Stratonaut (10,000), Aurora Legend (20,000).
+- The launchpad shows the streak, rank progress, solved/flights/best score and a live countdown to the next daily flight. Records are counted exactly once per flight and merge correctly when a guest signs in. Older saves rebuild their record from history.
+- After the whole library has been flown, the oldest mysteries return with newly dealt prompts. The 60 most recent (or half the library, if smaller) stay retired.
 
 ## Content
 
-`lib/hidden-content.js` contains **30 distinct hidden answers and 3,391 accepted trivia entries**, plus aliases, across 30 categories. Each category contains approximately 100-120 curated options classified by rarity (Common: 5 pts, Uncommon: 10 pts, Rare: 20 pts, Deep cut: 40 pts). Each puzzle has five pairs using ten distinct categories; versions rotate the pairing/order. Hidden answers have 8–12 letters and 6–9 distinct letters. Coverage checks require every hidden letter to appear in at least three distinct accepted answers and in at least two prompts without relying exclusively on deep cuts.
+The library is server-only and has two parts.
 
-The bank has been authored and checked for these structural constraints; it has **not** been validated by a human familiarity panel. Prompts share curated category dictionaries. These are 30 complete assignments, not 300 independent unique trivia categories. A limited dictionary can reject a valid answer; the UI explains that and lets players submit feedback. Reports are stored privately, up to three per flight, with no automatic points or dictionary updates.
+**Answer bank: `lib/updraft-bank/`, 113 prompts and 53,930 accepted answers** (plus aliases). There is one file per prompt. Each lists answers in four rarity tiers, with aliases for spellings, nicknames, abbreviations and Indian-language names. `AUTHORING.md` in that folder holds the rules. `npm run lint:bank` reports duplicates, bad lengths and broken aliases. `npm run build:bank` regenerates `index.js` after adding a file; `npm run build` runs it too.
 
-The original document's target of revealing 75% of distinct letters in five probes cannot hold for answers with 8–9 distinct letters. This prototype does not claim to meet that criterion. Human playtesting should evaluate inference from partially revealed letters, recognition, completion rate and enjoyment before expanding to 1,000+ puzzles.
+Each flight is dealt five everyday/specialist pairs, ten distinct prompts. Every letter of the hidden answer must be reachable from at least two of the ten without relying on a deep cut. The deal uses a CSPRNG. A saved flight stores only prompt references (about 2 KB), not answer lists; answers are looked up when a move arrives.
 
-Published puzzle snapshots live inside each attempt, so a later content release cannot change an in-progress target, accepted answers, points or explanation. New published editions should get new version IDs. Canonical answer identity remains stable to prevent repeats across editions.
+**Mysteries: `lib/hidden-puzzles.js`, 329 hidden answers.** Each has a category, a reveal explanation, and a hint that is checked not to contain any word of the answer. IDs are positional per edition (`hd-1-*`, `hd-2-*`); only append. `validateLibrary()` checks lengths, duplicates, hints and letter coverage.
+
+The bank was written by AI authoring passes instructed to include only entries they were sure of. It has passed the structural linter but has **not** been reviewed by people, and deep-cut tiers are the most likely place for errors. Players can report missing or wrong answers from the game; reports are stored privately.
 
 ## Persistence and concurrency
 
@@ -111,3 +140,17 @@ All **11 browser checks passed** against an isolated checkout of release `db01da
 | Tutorial answer-to-letter transition | No separate offline tutorial | 6.3 ms |
 
 These are measured samples from this connection, not latency guarantees. Server-side answer and scoring validation still depends on the network. The immediate next screen and tutorial do not wait for decorative animations. Raw live reports and screenshots are in ignored `test-results/updraft-*` files.
+
+## Expansion: library, hints, scoring, 3D motion (20 November 2026)
+
+**Library.** 113 prompts (51 everyday, 62 specialist: NBA, cricket, football, tennis, F1, Olympians, Bollywood and South Indian films, Hollywood, TV, anime, Pokémon, books, Harry Potter, Star Wars, mythology, scientists, leaders and more) with 53,930 accepted answers, and 329 mysteries with hints. See *Content* above for provenance and review status.
+
+**3D motion layer** (`visuals/updraft/flightdeck-motion.js`, `flightdeck.css`, tuning in `CONFIG.deck` of `gsap-config.js`). Letter tiles are two-faced cards that flip on a horizontal axis and hop in a wave; the mystery deals itself tile by tile. Prompt cards swing in like doors, lean toward the mouse pointer with their icon and title on raised 3D planes, and the chosen card lifts toward the player. Launch keys flip up like keycaps; a launched letter tumbles along a curved arc; score and altitude count up; spent Fuel cells pop; the clue card unfolds downward; the result medal spins like a tossed coin, stars land one by one and the breakdown adds up line by line. The storybook scene shifts in parallax layers with the pointer. Everything is presentation only: it reads already-rendered state, never delays a move, is skipped by Motion off, and is disabled by reduced-motion preferences. Letters can also be launched from the keyboard.
+
+### Verification (20 November 2026)
+
+- `npm test`: **95/95** pass, including 3,000 deterministic stress flights with hints and server clocks, the worked scoring example, quick/swift timing edge cases, streak and rank rules, guest-claim merging of the pilot record, flights saved before this release, symbol and digit matching, and the Postgres migration.
+- `npm run lint:bank`: 113 categories, 0 problems. `validateLibrary()`: 0 errors (lengths, duplicates, hint leaks, letter coverage for every mystery).
+- Updraft browser tests: **26/26** pass against the full library (five-round games at 320–1440 px, hint purchase and confirm, quick-bonus meter, keyboard launch, itemised result that sums to the server score, streak and next flight, plus all cinematic tests).
+- `npm run build`: the answer bank ships only inside the server function; no public file contains any answer.
+- Content review: a pattern scan for padding (fake “Jr”, name-plus-extra-word, doubled words) found only legitimate entries, and random samples of rare/deep-cut entries in the specialist files were all real. This is a sample, not a full review; the deep tiers of cricketer, footballer, tennis_player, f1_driver, olympian, fighter, bollywood_song and the very recent (2025) titles are most worth a human skim.

@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f0e8d9" />
+  <meta name="description" content="Updraft — a little daily trivia flight through five wonders and a living sky." />
+  <title>Updraft — A Little Flight of Wonder</title>
+  <link rel="stylesheet" href="./src/styles.css" />
+  <script defer src="./src/config.js"></script>
+  <script defer src="./src/game.js"></script>
+  <script defer src="./src/soundscore.js"></script>
+  <script defer src="./src/audio.js"></script>
+  <script defer src="./src/acting.js"></script>
+  <script defer src="./src/postcard.js"></script>
+  <script defer src="./src/logbook.js"></script>
+  <script defer src="./src/skycinema.js"></script>
+  <script defer src="./src/app.js"></script>
+</head>
+<body>
+  <div class="site-shell">
+    <header class="masthead">
+      <div class="brand" aria-label="Updraft">
+        <span class="brand-mark" aria-hidden="true"><svg width="30" height="34" viewBox="0 0 30 34" fill="none"><path d="M15 2C7 2 3 8 3 15c0 6 6 12 12 15 6-3 12-9 12-15 0-7-4-13-12-13Z" fill="#da745c" stroke="#8c554b" stroke-width="1.2"/><path d="M10 3c-4 8-2 19 5 27M20 3c4 8 2 19-5 27" stroke="#f6dfbb" stroke-width="3"/><path d="M11 31h8" stroke="#795746" stroke-width="3" stroke-linecap="round"/></svg></span>
+        <span>updraft<span class="brand-dot">.</span></span>
+      </div>
+      <div class="masthead-center"><span class="top-line"></span> AN EVERYDAY ADVENTURE IN WONDER <span class="top-line"></span></div>
+      <div class="top-actions">
+        <span class="date-badge" id="date-label">TODAY'S FLIGHT</span>
+        <button type="button" id="sound-toggle" class="icon-button" aria-label="Turn sound on" title="Toggle sound">
+          <svg class="sound-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m4 9 4 0 5-4v14l-5-4H4z"/><path class="sound-wave" d="M17 9c2 1 2 5 0 6M20 6c4 4 4 8 0 12"/><path class="sound-slash" d="m17 9 5 6"/></svg>
+        </button>
+        <button type="button" id="debug-toggle" class="icon-button debug-trigger" title="Creative controls" aria-label="Open creative controls">⚙</button>
+      </div>
+    </header>
+
+    <main class="main-layout">
+      <section class="paper-panel" id="paper-panel" aria-live="polite">
+        <div class="panel-topline"><span class="sun-symbol" aria-hidden="true">✳</span> THE LITTLE WONDERS EXPEDITION <span class="panel-serial">№ 001</span></div>
+
+        <div id="intro-view" class="panel-view intro-view">
+          <div class="eyebrow"><span class="eyebrow-dash"></span> YOUR BOARDING PASS</div>
+          <h1>Curiosity<br/>looks good<br/><em>on you.</em></h1>
+          <p class="intro-copy">Five questions. One trusty balloon. A whole sky waiting to see how far your curiosity can carry you.</p>
+          <p class="returning-note" id="returning-note" hidden></p>
+          <div class="boarding-illustration"><span class="stamp-circle">☼</span><span>NO EXPERIENCE<br/>NECESSARY<br/><small>JUST A LITTLE WONDER</small></span></div>
+          <button type="button" class="primary-button" id="start-button"><span>LET'S TAKE FLIGHT</span><span class="button-arrow" aria-hidden="true">↗</span></button>
+          <p class="panel-footnote">A new route every day · About 2 minutes</p>
+          <button type="button" id="atlas-intro" class="atlas-link">✦ &nbsp; OPEN YOUR FLIGHT ATLAS <span aria-hidden="true">↗</span></button>
+        </div>
+
+        <div id="question-view" class="panel-view question-view" hidden>
+          <div class="question-meta"><span id="question-counter">WONDER 01 / 05</span><div class="dots" id="progress-dots" aria-label="Progress"></div></div>
+          <div class="eyebrow topic-label" id="topic-label">THE LIVING WORLD</div>
+          <h2 id="question-text">A little question goes a long way.</h2>
+          <p class="answer-instruction">Choose your answer, co-pilot.</p>
+          <div class="answers" id="answer-buttons" role="group" aria-label="Answer options"></div>
+          <div class="question-bottom"><span class="small-star">✳</span><span id="question-hint">NO CLOCK. JUST CURIOSITY.</span></div>
+        </div>
+
+        <div id="result-view" class="panel-view result-view" hidden>
+          <div class="eyebrow" id="result-kicker">A LITTLE MOMENT OF WONDER</div>
+          <div id="watching-beat" class="watching-beat" role="status" aria-live="polite" hidden>
+            <span class="watching-orbit" aria-hidden="true">✧</span>
+            <span class="watching-overline">A MOMENT BETWEEN YOU AND THE SKY</span>
+            <em>Look up, co-pilot.</em>
+            <small>Something is happening above.</small>
+          </div>
+          <div class="result-stamp" id="result-symbol" aria-hidden="true">✧</div>
+          <h2 id="result-title">Oh, beautifully done.</h2>
+          <p id="result-fact" class="result-fact">The sky has something to tell you.</p>
+          <div class="fact-note" id="result-note"><span>✦</span> A NOTE FOR YOUR FLIGHT JOURNAL</div>
+          <button type="button" id="skip-button" class="secondary-button">Continue flight <span>→</span></button>
+          <p class="panel-footnote">Or press Space to continue</p>
+        </div>
+
+        <div id="end-view" class="panel-view end-view" hidden>
+          <div class="eyebrow" id="end-kicker">FLIGHT COMPLETE</div>
+          <div class="end-seal" aria-hidden="true">✳</div>
+          <h2 id="end-title">What a lovely little journey.</h2>
+          <p class="end-lede" id="end-lede">Every wonder was worth the climb.</p>
+          <p id="end-log-note" class="end-log-note" aria-live="polite"></p>
+          <div class="end-stats"><div><strong id="end-correct">0<span>/5</span></strong><small>WONDERS FOUND</small></div><div><strong id="end-peak">0<span>m</span></strong><small>HIGHEST POINT</small></div></div>
+          <div class="journal-title">YOUR LITTLE SKY JOURNAL <span>✦</span></div>
+          <div id="journal-items" class="journal-items"></div>
+          <blockquote class="miri-last-note" id="miri-last-note" aria-label="A note from Miri"></blockquote>
+          <button type="button" class="sky-mail-button" id="postcard-open"><span class="mail-icon" aria-hidden="true">✉</span><span>UNFOLD YOUR SKY MAIL<small id="postcard-hint">A little letter from above</small></span><span aria-hidden="true">↗</span></button>
+          <button type="button" class="primary-button" id="replay-button"><span>TAKE ANOTHER FLIGHT</span><span class="button-arrow">↗</span></button>
+          <div class="end-links"><button type="button" class="text-button" id="atlas-end">MY FLIGHT ATLAS ↗</button><button type="button" class="text-button" id="share-button">Copy flight note ↗</button></div>
+        </div>
+        <div class="paper-corner" aria-hidden="true">✺</div>
+      </section>
+
+      <section class="world" id="world" aria-label="Animated hot air balloon flight scene" tabindex="-1" data-expression="calm">
+        <div class="sky-layer sky-0"></div><div class="sky-layer sky-1"></div><div class="sky-layer sky-2"></div><div class="sky-layer sky-3"></div><div class="sky-layer sky-4"></div>
+        <div class="sky-grain" aria-hidden="true"></div>
+        <!-- Chapter VI: three fixed-cost atmosphere layers, composed as one director shot. -->
+        <div class="cinematic-sunbeam" aria-hidden="true"></div>
+        <svg class="wind-ribbons" viewBox="0 0 900 680" preserveAspectRatio="none" aria-hidden="true">
+          <g fill="none" stroke="#fff9e8" stroke-linecap="round">
+            <path d="M-120 440 Q90 310 280 370 T670 335 T1020 240"/>
+            <path d="M-130 525 Q125 400 340 448 T770 371 T1020 335"/>
+            <path d="M-105 285 Q155 230 358 270 T810 181 T1020 195"/>
+            <path d="M-120 610 Q75 550 275 575 T625 518 T1030 430"/>
+          </g>
+        </svg>
+        <div class="sky-visitor" id="sky-visitor" aria-hidden="true">
+          <svg viewBox="0 0 180 125" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M17 90Q54 53 95 77T161 48" stroke="#f8ebc8" stroke-width="2.5" stroke-dasharray="3 7" opacity=".9"/>
+            <path d="M91 33L124 62 94 80 65 58Z" fill="#fbefd4" stroke="#8b8b90" stroke-width="2"/>
+            <path d="M91 33L94 80 65 58Z" fill="#e49f83" opacity=".93"/>
+            <path d="M91 33L124 62 94 80Z" fill="#74b9b0"/>
+            <path d="M65 58 94 80 124 62" stroke="#fef9e9" stroke-width="2" opacity=".85"/>
+            <path d="M95 79Q93 91 106 97T105 115" stroke="#7a7b86" stroke-width="1.4"/>
+            <path d="m105 97-9 7 12 2" fill="#e7ac91"/>
+          </svg>
+        </div>
+        <div class="sun-halo" aria-hidden="true"><span></span></div>
+        <svg class="aurora" viewBox="0 0 800 480" preserveAspectRatio="none" aria-hidden="true">
+          <defs><linearGradient id="auroraFill" x1="0" y1="0" x2=".75" y2="1"><stop offset="0%" stop-color="#67c9be" stop-opacity=".0"/><stop offset="36%" stop-color="#84ddbd" stop-opacity=".5"/><stop offset="70%" stop-color="#b99fd0" stop-opacity=".25"/><stop offset="100%" stop-color="#93e9ce" stop-opacity="0"/></linearGradient></defs>
+          <path d="M-50 255 Q125 45 310 220 T690 166 T900 80 L900 230 Q715 345 530 265 T150 340 L-50 420Z" fill="url(#auroraFill)"/>
+        </svg>
+        <div class="starfield" id="starfield" aria-hidden="true"></div>
+        <div class="flying-birds" aria-hidden="true"><span>⌁</span><span>⌁</span><span>⌁</span></div>
+        <div class="far-clouds" aria-hidden="true">
+          <svg viewBox="0 0 1000 360" preserveAspectRatio="xMidYMax slice"><g fill="#fff9f1" opacity=".74"><path d="M-135 190c35-41 82-44 115-20 35-73 134-63 154 0 56-32 106 10 108 42H-135Z"/><path d="M340 150c34-52 99-52 125-5 38-56 139-32 148 29 46-21 95 8 98 47H340Z"/><path d="M754 195c27-44 83-44 112-8 32-66 122-50 135 13 40-17 78 13 75 42H754Z"/></g></svg>
+        </div>
+        <div class="near-clouds" aria-hidden="true">
+          <svg viewBox="0 0 1200 360" preserveAspectRatio="xMidYMax slice"><g fill="#fff6eb" opacity=".9"><path d="M-100 243c50-65 145-65 184-17 58-98 196-73 226 16 45-45 131-18 150 29H-100Z"/><path d="M695 261c43-73 134-78 191-26 59-101 187-78 218 11 58-35 136 16 149 56H695Z"/></g></svg>
+        </div>
+        <div class="foreground-veil" aria-hidden="true"><svg viewBox="0 0 1000 260" preserveAspectRatio="none"><path d="M-80 237Q46 165 132 211q62-102 163-58t115 92q98-78 164-23t156-27q102-61 197 42h152v45H-80Z" fill="#fff9ea" opacity=".78"/></svg></div>
+        <div class="ground" aria-hidden="true"><svg viewBox="0 0 1100 230" preserveAspectRatio="none"><path d="M0 145C115 60 216 87 339 139S572 208 697 116 915 44 1100 129V230H0Z" fill="#c8a9a0"/><path d="M0 185C205 116 303 199 500 147s321-44 600 20v63H0Z" fill="#a8a9a2"/><path d="M0 208c190-35 290-2 440-28s416 30 660 14v36H0Z" fill="#8d9d95"/><g stroke="#6c8880" stroke-width="4" stroke-linecap="round"><path d="M130 190v-18m-7 4 7-9 7 9M876 190v-27m-10 9 10-14 11 14"/></g></svg></div>
+        <div class="stage-top">
+          <div class="altitude-readout"><div class="hud-label"><span class="hud-dot">●</span> CURRENT ALTITUDE</div><strong><span id="altitude-num">0000</span><small>m</small></strong><div class="altimeter-line"><span id="altimeter-progress"></span></div></div>
+          <div class="tier-readout"><div class="hud-label">✧ THE SKY ABOVE</div><div id="tier-name">FIRST LIGHT</div><div class="tier-micro" id="tier-micro">A GOOD PLACE TO BEGIN</div></div>
+        </div>
+        <div class="ambient-caption" aria-hidden="true">THE SKY IS FULL OF LITTLE SECRETS</div>
+        <div class="balloon-anchor" id="balloon-anchor" aria-hidden="true">
+          <div class="balloon-float">
+            <svg class="balloon-art" viewBox="0 0 400 575" role="img" aria-label="Miri Quill smiling in a whimsical hot air balloon">
+              <defs>
+                <clipPath id="envelopeClip"><path d="M200 27C127 27 69 75 66 156 63 244 112 303 168 346L232 346C288 303 337 244 334 156 331 75 273 27 200 27Z"/></clipPath>
+                <linearGradient id="shellShade" x1="0" x2="1" y1="0" y2=".5"><stop offset="0" stop-color="#654d69" stop-opacity=".24"/><stop offset=".38" stop-color="#fff6e1" stop-opacity=".08"/><stop offset=".75" stop-color="#fff9ec" stop-opacity=".04"/><stop offset="1" stop-color="#3c5266" stop-opacity=".33"/></linearGradient>
+                <linearGradient id="basketShade" x1="0" y1="0" x2="1" y2=".4"><stop offset="0" stop-color="#a46d50"/><stop offset=".45" stop-color="#deb180"/><stop offset="1" stop-color="#94634b"/></linearGradient>
+              </defs>
+              <g class="envelope-rig">
+                <g class="envelope-body">
+                  <path d="M200 27C127 27 69 75 66 156 63 244 112 303 168 346L232 346C288 303 337 244 334 156 331 75 273 27 200 27Z" fill="#f9ddb2" stroke="#835f5d" stroke-width="2.4"/>
+                  <g clip-path="url(#envelopeClip)">
+                    <path d="M88 23C111 54 95 126 118 212c12 48 30 87 58 137h-66C53 263 37 124 88 23Z" fill="#d87361"/>
+                    <path d="M150 18c-18 67-28 150-7 236 9 38 24 67 42 95h-50c-52-90-55-223-22-327Z" fill="#f1af76"/>
+                    <path d="M220 21c-17 86-14 228-12 330h-44c-29-87-25-243-3-335Z" fill="#f9e7c7"/>
+                    <path d="M262 18c21 78 31 198 12 272-6 21-17 42-27 60h-43c18-100 10-238 13-330Z" fill="#63a89f"/>
+                    <path d="M306 24c47 102 34 234-24 323h-43c48-104 47-221 24-323Z" fill="#d87561"/>
+                    <path d="M200 27C127 27 69 75 66 156 63 244 112 303 168 346L232 346C288 303 337 244 334 156 331 75 273 27 200 27Z" fill="url(#shellShade)"/>
+                    <path d="M200 32C157 81 146 195 168 345M200 32C245 87 256 220 232 345M200 32C111 88 116 229 145 328M200 32C294 104 282 246 255 328" stroke="#805e55" stroke-opacity=".35" stroke-width="1.8" fill="none"/>
+                    <path d="M103 110C121 65 152 46 176 41" stroke="#fff9e5" stroke-width="11" stroke-linecap="round" opacity=".23" fill="none"/>
+                  </g>
+                  <path d="M172 344h56l-12 17h-32Z" fill="#94766b"/><path d="M184 353h32l-7 14h-19Z" fill="#c6a48a"/>
+                  <ellipse cx="200" cy="29" rx="20" ry="6" fill="#c57763"/><path d="M198 24v-12" stroke="#936859" stroke-width="3" stroke-linecap="round"/><circle cx="198" cy="10" r="5" fill="#e9bb73"/>
+                </g>
+                <g class="ropes" stroke="#765a54" stroke-width="3" fill="none" stroke-linecap="round">
+                  <path d="M120 287 138 474M280 287 261 474M172 356 159 474M228 356 241 474"/>
+                  <path d="M131 330 155 398M268 330 245 398" stroke="#fff2d2" stroke-width="1.1" opacity=".6"/>
+                </g>
+                <g class="burner" transform="translate(184 391)"><path d="M0 0h32v23H0Z" fill="#947c6b"/><path d="M5 0v-9h22v9" fill="none" stroke="#604d51" stroke-width="4"/><path d="M0 19h32" stroke="#6e6260" stroke-width="5"/><path class="burner-flame" d="M16-12C7-21 12-30 16-36c2 9 11 14 7 23-2 5-5 8-7 8-5 0-8-4-8-9Z" fill="#f5b65a"/></g>
+              </g>
+              <g class="captain" id="captain">
+                <g class="arm arm-left"><path d="M165 457Q140 455 130 477L118 499Q112 506 123 512L139 512 168 481Z" fill="#3c6271" stroke="#314e5d" stroke-width="3"/><ellipse cx="118" cy="505" rx="14" ry="11" fill="#ffc49d"/></g>
+                <g class="arm arm-right"><path d="M238 459Q261 449 273 465L291 492Q297 503 283 509L269 502 236 478Z" fill="#3c6271" stroke="#314e5d" stroke-width="3"/><ellipse cx="288" cy="501" rx="13" ry="12" fill="#ffc49d"/><path d="M288 497v-17" stroke="#e1a181" stroke-width="4" stroke-linecap="round" class="thumb"/></g>
+                <path d="M165 467Q169 442 187 437L219 437Q240 441 246 465L255 530H149Z" fill="#315569" stroke="#304c58" stroke-width="3"/>
+                <path d="M183 442 201 462l17-20 4 83h-44Z" fill="#f9ecce"/>
+                <path d="M199 462v65" stroke="#bc9578" stroke-width="2"/>
+                <circle cx="202" cy="477" r="3" fill="#c99058"/><circle cx="202" cy="497" r="3" fill="#c99058"/>
+                <path d="M179 442Q193 452 207 452Q220 451 227 440L235 450Q219 473 202 471Q181 467 171 452Z" fill="#f5b263"/>
+                <g class="scarf-tail"><path d="M221 458Q265 464 294 447Q276 474 238 477L225 474Z" fill="#d77a61"/><path d="M291 447l12-3-6 14-13-1Z" fill="#bb6859"/>
+                  <g class="scarf-stitches" aria-hidden="true">
+                    <path class="scarf-star" d="m240 466 2.2-4.2 2.1 4.2 4.2 1.6-4.2 2-2.1 4.1-2.2-4.1-4.2-2z"/>
+                    <path class="scarf-star" d="m253 465 2-4 2 4 4 1.5-4 2-2 3.8-2-3.8-4-2z"/>
+                    <path class="scarf-star" d="m265 462 1.8-3.6 1.8 3.6 3.7 1.4-3.7 1.8-1.8 3.7-1.8-3.7-3.8-1.8z"/>
+                    <path class="scarf-star" d="m277 457 1.7-3.2 1.7 3.2 3.2 1.2-3.2 1.6-1.7 3.2-1.7-3.2-3.2-1.6z"/>
+                    <path class="scarf-star" d="m289 452 1.5-3 1.5 3 3 1.1-3 1.5-1.5 3-1.5-3-3-1.5z"/>
+                  </g></g>
+                <g class="head">
+                  <path d="M157 394Q154 340 203 345Q251 349 248 400L243 421Q237 441 201 448 164 437 160 416Z" fill="#413f48"/>
+                  <ellipse cx="201" cy="398" rx="45" ry="51" fill="#f8bf99" stroke="#ca917f" stroke-width="2"/>
+                  <ellipse cx="157" cy="405" rx="8" ry="12" fill="#eeb08e"/><ellipse cx="246" cy="405" rx="8" ry="12" fill="#eeb08e"/>
+                  <path d="M155 388Q147 344 185 339Q222 326 246 356L249 387Q239 374 226 366 210 381 188 372 168 385 155 388Z" fill="#3d3d46"/>
+                  <path d="M166 362Q175 336 191 336" fill="none" stroke="#353644" stroke-width="10" stroke-linecap="round"/>
+                  <g class="goggles"><path d="M164 355Q194 344 234 355" fill="none" stroke="#a46d51" stroke-width="9" stroke-linecap="round"/><rect x="171" y="342" width="24" height="17" rx="8" fill="#e8bd78" stroke="#74564e" stroke-width="3"/><rect x="207" y="342" width="24" height="17" rx="8" fill="#e8bd78" stroke="#74564e" stroke-width="3"/><path d="M196 351h11" stroke="#78534b" stroke-width="4"/><path d="M174 347h9M210 347h9" stroke="#fff2cb" stroke-width="2.2" stroke-linecap="round"/></g>
+                  <g class="cheek-glow"><ellipse cx="175" cy="418" rx="11" ry="6" fill="#e8867a" opacity=".28"/><ellipse cx="229" cy="418" rx="11" ry="6" fill="#e8867a" opacity=".28"/></g>
+                  <g class="eyebrows" stroke="#6b4945" stroke-width="3.4" stroke-linecap="round"><path class="brow-left" d="M175 390q10-7 19 0"/><path class="brow-right" d="M210 389q10-6 19 1"/></g>
+                  <g class="eyes"><ellipse cx="184" cy="402" rx="7" ry="8.5" fill="#fff5e7"/><ellipse cx="218" cy="402" rx="7" ry="8.5" fill="#fff5e7"/><g class="pupils" fill="#384854"><circle cx="185" cy="403" r="4.2"/><circle cx="219" cy="403" r="4.2"/></g><g fill="#fff"><circle cx="186.4" cy="401.5" r="1.4"/><circle cx="220.4" cy="401.5" r="1.4"/></g><g class="lid-curtains" fill="#f8bf99"><rect class="lid-cover lid-left" x="177.2" y="393" width="13.6" height="18" rx="5"/><rect class="lid-cover lid-right" x="211.2" y="393" width="13.6" height="18" rx="5"/></g></g>
+                  <path d="M201 404q-7 13 0 14 5 1 7-3" fill="none" stroke="#d58b7a" stroke-width="2.6" stroke-linecap="round"/>
+                  <g fill="#d9897c" opacity=".72"><circle cx="170" cy="417" r="1.8"/><circle cx="176" cy="421" r="1.5"/><circle cx="183" cy="418" r="1.5"/><circle cx="220" cy="419" r="1.5"/><circle cx="228" cy="422" r="1.9"/><circle cx="234" cy="417" r="1.6"/></g>
+                  <path class="mouth mouth-calm" d="M191 428Q202 435 213 427" fill="none" stroke="#9a5755" stroke-width="3.4" stroke-linecap="round"/>
+                  <path class="mouth mouth-happy" d="M184 426Q201 453 219 426Q201 436 184 426Z" fill="#8c4749" stroke="#a05b56" stroke-width="2"/><path class="mouth mouth-rueful" d="M188 433Q202 421 214 431" fill="none" stroke="#95595a" stroke-width="3" stroke-linecap="round"/>
+                  <ellipse class="mouth mouth-awe" cx="202" cy="431" rx="6.5" ry="9" fill="#925651"/>
+                  <path class="mouth mouth-wink" d="M190 429q15 15 25-3" fill="none" stroke="#93565a" stroke-width="3.5" stroke-linecap="round"/>
+                  <path class="mouth mouth-soft" d="M190 427q12 12 25 0" fill="none" stroke="#9c6259" stroke-width="3" stroke-linecap="round"/>
+                  <path class="mouth mouth-thinking" d="M195 429q6 2 12-2" fill="none" stroke="#985b5a" stroke-width="3" stroke-linecap="round"/>
+                </g>
+              </g>
+              <g class="basket"><path d="M139 478h122l-9 67q-50 20-105 0Z" fill="url(#basketShade)" stroke="#815e4e" stroke-width="3"/><g stroke="#926e53" stroke-width="2" opacity=".64"><path d="M148 491 253 521M145 506 252 538M157 540 256 510M147 526 255 493M150 478 245 547M177 478 219 547M207 478 182 548M239 478 155 546"/></g><path d="M134 474Q200 484 266 474l1 15q-67 16-134 0Z" fill="#bd8c64" stroke="#815c4a" stroke-width="3"/><path d="M145 543q55 17 110 0" fill="none" stroke="#7c594a" stroke-width="4"/></g>
+              <g class="basket-badge"><circle cx="200" cy="517" r="14" fill="#e7bd79" stroke="#835e4b" stroke-width="2"/><path d="m200 509 3.2 6.4 7.1 1-5.2 5 .9 7-6-3.3-6 3.3.9-7-5.2-5 7.1-1Z" fill="#a9785b" transform="translate(0 -3) scale(1 .9)"/></g>
+            </svg>
+          </div>
+        </div>
+        <button type="button" id="soundscape-open" class="soundscape-ticket" aria-label="Open the Sound of the Sky listening room" aria-haspopup="dialog" aria-controls="soundscape-dialog">
+          <span class="soundscape-ticket-mark" aria-hidden="true">♫</span>
+          <span class="soundscape-ticket-words"><span class="soundscape-ticket-overline">THE SOUND OF THE SKY</span><strong id="soundscape-name">First Light</strong><small id="soundscape-subtitle">A kettle of morning air</small></span>
+          <span class="soundscape-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+        </button>
+        <div class="speech" id="speech" aria-live="polite"><span class="speech-name">MIRI QUILL · YOUR CO-PILOT</span><p id="speech-text">Well, hello there. Shall we see what the sky is hiding?</p><span class="speech-tail"></span></div>
+        <div class="portrait-cutaway" id="portrait-cutaway" aria-hidden="true">
+          <div class="portrait-orbit portrait-orbit-one"></div><div class="portrait-orbit portrait-orbit-two"></div>
+          <div class="portrait-frame"><svg id="portrait-face" class="portrait-face-svg" viewBox="150 326 103 129" aria-hidden="true"></svg></div>
+          <div class="portrait-caption"><span>✧ A MOMENT WITH MIRI ✧</span><strong id="portrait-line">SOME ANSWERS CHANGE THE SKY.</strong></div>
+        </div>
+        <div class="sky-writing" aria-hidden="true">
+          <div class="sky-writing-kicker">FIVE WONDERS BECOME ONE SKY SONG</div>
+          <svg id="sky-writing-svg" viewBox="0 0 1200 650" preserveAspectRatio="xMidYMid meet"></svg>
+          <div class="sky-writing-title">THE CO-PILOT'S CONSTELLATION <span>✦</span></div>
+        </div>
+        <div class="reaction-flare" aria-hidden="true"></div>
+        <div class="film-caption" aria-hidden="true"><span class="film-caption-ornament">✧</span><span id="film-caption-text">THE SKY MOVES WITH YOU</span><span id="film-caption-short">A LITTLE WONDER</span><span class="film-caption-ornament">✧</span></div>
+        <div class="effect-particles" id="effect-particles" aria-hidden="true"></div>
+        <div class="cinema-top" aria-hidden="true"></div><div class="cinema-bottom" aria-hidden="true"></div>
+        <div class="tier-announcement" id="tier-announcement" aria-hidden="true"><small>YOU'VE REACHED</small><strong id="tier-announcement-name">THE CLOUD SEA</strong><span>✦ ✦ ✦</span></div>
+        <div class="world-footer">
+          <div class="fuel-display"><span class="hud-label">BURNER FUEL</span><span class="fuel-capsules" id="fuel-capsules" aria-label="6 of 6 fuel left"></span><span class="fuel-numeric" id="fuel-numeric">6 / 6</span></div>
+          <button class="flight-remark wave-button" id="wave-button" type="button" aria-label="Wave hello to Miri Quill" title="Wave to Miri"><span class="flight-spark" aria-hidden="true">✳</span> WAVE TO MIRI</button>
+        </div>
+        <div class="world-border" aria-hidden="true"></div>
+      </section>
+    </main>
+    <footer class="bottom-footer"><span>MADE FOR THE CURIOUS ✧</span><span>NO WRONG TURNS. ONLY NEW VIEWS.</span><span>© UPDRAFT STUDIO</span></footer>
+  </div>
+
+  <dialog id="postcard-dialog" class="postcard-dialog" aria-labelledby="postcard-title" aria-describedby="postcard-description">
+    <div class="postcard-header"><div><span>UPDRAFT CORRESPONDENCE · № 001</span><h2 id="postcard-title">A letter from the sky.</h2></div><button type="button" id="postcard-close" aria-label="Close Sky Mail">×</button></div>
+    <p id="postcard-description" class="postcard-description">Your flight's five discoveries, joined into a little celestial keepsake.</p>
+    <div id="postcard-art" class="postcard-art" role="img" aria-label="Illustrated flight postcard showing your discoveries as a star map" tabindex="0"></div>
+    <button type="button" id="postcard-zoom" class="postcard-zoom" aria-pressed="false">Inspect the star map up close  ↗</button>
+    <div class="postcard-mobile-summary" id="postcard-mobile-summary"><span>NOTES FROM YOUR FLIGHT</span><strong id="postcard-mobile-stats"></strong><div id="postcard-mobile-stamps"></div></div>
+    <div class="postcard-actions"><button type="button" id="postcard-save" class="postcard-save">SAVE POSTCARD IMAGE <span aria-hidden="true">↧</span></button><button type="button" id="postcard-copy" class="postcard-copy">Copy flight note ↗</button></div>
+    <p class="postcard-footnote" id="postcard-status" aria-live="polite">Made from this very flight. Yours to keep.</p>
+  </dialog>
+  <dialog id="atlas-dialog" class="atlas-dialog" aria-labelledby="atlas-title" aria-describedby="atlas-description">
+    <div class="atlas-header"><div><span>UPDRAFT · THE FLIGHT ATLAS</span><h2 id="atlas-title">Every sky has a story.</h2></div><button type="button" id="atlas-close" aria-label="Close flight atlas">×</button></div>
+    <p class="atlas-description" id="atlas-description">Seven days of skies, including today. Choose one to fly its five-question route. Your best landings are kept privately on this device.</p>
+    <div class="atlas-stats"><div><strong id="atlas-flown">0</strong><span>SKIES VISITED</span></div><div><strong id="atlas-stars">0</strong><span>WONDERS FOUND</span></div><div><strong id="atlas-perfect">0</strong><span>PERFECT ROUTES</span></div></div>
+    <div class="atlas-grid" id="atlas-grid" role="group" aria-label="Choose a route from the past seven days"></div>
+    <p class="atlas-footnote"><span aria-hidden="true">✦</span> The atlas lives only in this browser. It never asks for an account or sends scores away.</p>
+  </dialog>
+  <dialog id="soundscape-dialog" class="soundscape-dialog" aria-labelledby="soundscape-heading" aria-describedby="soundscape-description">
+    <div class="soundscape-dialog-top"><span class="soundscape-dialog-kicker">UPDRAFT · LISTENING ROOM · № 005</span><button type="button" id="soundscape-close" aria-label="Close listening room">×</button></div>
+    <div class="soundscape-dialog-art" aria-hidden="true"><span>☾</span><span class="soundscape-diagram-lines">〰 〰 〰</span><span>✦</span></div>
+    <h2 id="soundscape-heading">The sky has<br/><em>its own music.</em></h2>
+    <p id="soundscape-description">Five altitudes. Five little acoustic worlds. Hear the burner catch, the wind change, and the night open up. Music starts only when you choose it.</p>
+    <div class="soundscape-choice-list" role="group" aria-label="Choose a sound mode">
+      <button type="button" data-sound-mode="off" aria-pressed="true"><span class="sound-choice-icon" aria-hidden="true">☾</span><span><strong>Silent flight</strong><small>Every cinematic still works without sound.</small></span><span class="sound-choice-indicator" aria-hidden="true">○</span></button>
+      <button type="button" data-sound-mode="quiet" aria-pressed="false"><span class="sound-choice-icon" aria-hidden="true">~</span><span><strong>Quiet skies</strong><small>Soft wind, warm notes, and gentle reactions.</small></span><span class="sound-choice-indicator" aria-hidden="true">○</span></button>
+      <button type="button" data-sound-mode="cinematic" aria-pressed="false"><span class="sound-choice-icon" aria-hidden="true">♫</span><span><strong>Cinematic skies</strong><small>Full ambient score, burner, and tiny melodies.</small></span><span class="sound-choice-indicator" aria-hidden="true">○</span></button>
+    </div>
+    <div class="soundscape-track"><span>NOW ABOVE THE CLOUDS</span><strong id="soundscape-track-name">First Light</strong><small id="soundscape-track-note">A kettle of morning air</small><div class="soundscape-waveform" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+    <p class="soundscape-footnote" id="soundscape-status" role="status">Sound is off. No audio plays without your choice.</p>
+  </dialog>
+  <aside id="debug-panel" class="debug-panel" hidden aria-label="Creative debug controls">
+    <div class="debug-header"><strong>FLIGHT DIRECTOR</strong><button type="button" id="debug-close" aria-label="Close debug controls">×</button></div>
+    <div class="debug-status"><div>EVENT <strong id="debug-event">IDLE</strong></div><div>FPS <strong id="debug-fps">—</strong></div><div>QUEUE <strong id="debug-queue">0</strong></div><div>SPARKS <strong id="debug-particles">0</strong></div></div>
+    <label for="debug-alt">ALTITUDE <span id="debug-alt-value">0m</span></label><input id="debug-alt" type="range" min="0" max="2000" step="10" value="0"/>
+    <label for="debug-fuel">FUEL <span id="debug-fuel-value">6</span></label><input id="debug-fuel" type="range" min="0" max="6" value="6"/>
+    <label for="debug-speed">TIME SCALE <span id="debug-speed-value">1×</span></label><input id="debug-speed" type="range" min="0.25" max="2" step="0.25" value="1"/>
+    <label class="debug-check"><input type="checkbox" id="debug-reduced"/> SIMULATE REDUCED MOTION</label>
+    <label class="debug-check"><input type="checkbox" id="debug-overlay"/> SHOW EVENT OVERLAY</label>
+    <div class="debug-actions"><button data-demo="wave">Wave hello</button><button data-demo="correct">Correct</button><button data-demo="rare">Rare find</button><button data-demo="wrong">Wrong</button><button data-demo="tier">New sky</button><button data-demo="landing">Soft landing</button><button data-demo="awe">Awe</button><button data-demo="constellation">Sky writing</button></div>
+    <p>Press D to toggle. Demos affect visuals only unless you move the sliders.</p>
+  </aside>
+  <div class="event-overlay" id="event-overlay" hidden></div>
+</body>
+</html>

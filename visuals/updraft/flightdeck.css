@@ -1,0 +1,127 @@
+/* Source: visuals/updraft/flightdeck.css. Static, final states only — all movement between
+   them is driven by GSAP (flightdeck-motion.js); the transitions below are the fallback used
+   when the cinema layer is switched off. */
+
+/* ---- 3D letter tiles: a blank face and a gold letter face on one turning card ---- */
+.hidden-words{perspective:900px}
+.letter-tile,.letter-tile.revealed{position:relative;background:transparent;border-color:transparent;box-shadow:none;perspective:520px}
+.tile-inner{position:absolute;inset:-1px -1px -3px;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.2,.8,.25,1.2)}
+.tile-front,.tile-back{position:absolute;inset:0;display:grid;place-items:center;border-radius:10px;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.tile-front{background:linear-gradient(#ffffff,#f0eff8);border:1px solid #cbcde5;border-bottom:3px solid #b9b8d4;color:#9899b8;box-shadow:0 4px 0 #c4bfd730,inset 0 1px 0 #fff}
+.tile-back{background:linear-gradient(#ffe9ad,#ffd47a);border:1px solid #e2bf75;border-bottom:3px solid #cfa24b;color:#59423d;box-shadow:0 4px 0 #d9ba8255,inset 0 1px 0 #fff6d8;transform:rotateX(180deg)}
+.letter-tile.revealed .tile-inner{transform:rotateX(180deg)}
+
+/* ---- The mystery, its hint and the live score ---- */
+.puzzle-question{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;min-width:0}
+.puzzle-category small{display:block;color:#74768e;font-weight:400}
+.hint-button{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:6px 14px;border-radius:999px;background:#fff8e2;border:1px solid #ecd9a4;color:#6b5220;font-size:13px;font-weight:700;box-shadow:0 3px 0 #e4cf9b;white-space:nowrap}
+.hint-button small{font-size:11px;font-weight:600;color:#a0703a}
+.hint-button:hover:not(:disabled){background:#ffefc2}
+.hint-button.armed{background:#ffe1c9;border-color:#e9a67f;color:#7c3a1c;box-shadow:0 3px 0 #e0a27f}
+.hint-button.armed small{color:#9a4b26}
+.hint-button:disabled{cursor:not-allowed}
+.hint-card{position:relative;z-index:2;display:flex;gap:12px;align-items:flex-start;margin:-14px 0 24px;padding:13px 16px;border-radius:14px;background:#fffbe9;border:1px solid #ecd9a4;box-shadow:0 5px 14px #8a6b2a14;backface-visibility:hidden}
+.hint-card>span{font-size:22px;line-height:1.2}
+.hint-card p{margin:0;font-size:14px;line-height:1.5;color:#5d4a22}
+.hint-card strong{display:block;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#a0703a}
+.hint-card em{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:8px;background:#ffe7a6;font:700 12px/1.6 Arial,Helvetica,sans-serif;color:#59423d}
+.score-chip b{font-weight:inherit}
+
+/* ---- Step card: quick-answer meter, 3D prompt cards ---- */
+.panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px 18px;flex-wrap:wrap}
+.panel-head>div:first-child{min-width:0;flex:1 1 240px}
+.quick-meter{display:flex;align-items:center;gap:10px;min-width:205px;padding:8px 13px 8px 9px;border-radius:14px;background:#eef7ef;border:1px solid #cbe2cf;color:#2f5d45}
+.quick-meter strong{display:block;font-size:13px;line-height:1.3}
+.quick-meter small{display:block;font-size:11px;line-height:1.3;color:inherit;opacity:.8}
+.quick-ring{--left:1;flex:none;width:30px;height:30px;border-radius:50%;background:conic-gradient(currentColor calc(var(--left)*360deg),#00000014 0);-webkit-mask:radial-gradient(circle,transparent 8px,#000 9px);mask:radial-gradient(circle,transparent 8px,#000 9px)}
+.quick-meter.tier-6{background:#fff7e3;border-color:#ecd9a4;color:#7a5a16}
+.quick-meter.tier-3{background:#fff0e6;border-color:#ecc7ab;color:#8a4a22}
+.quick-meter.spent,.quick-meter.untimed{background:#f3f2f6;border-color:#dedbe6;color:#646780}
+.prompt-grid{perspective:1100px}
+.prompt{transform-style:preserve-3d;will-change:transform}
+.prompt-icon{transform:translateZ(26px);box-shadow:0 6px 10px #5a4a7a14}
+.prompt strong{transform:translateZ(14px)}
+.prompt-grid.has-choice .prompt:not(.chosen){opacity:.72;transform:scale(.97)}
+.prompt-note{display:block;margin-top:3px;font-size:12px;font-weight:400;color:var(--muted)}
+.quick-chip{margin-left:auto;padding:3px 10px;border-radius:999px;background:#ffffffc9;border:1px solid #cbe2cf;color:#2f5d45;font-size:12px;font-weight:700;white-space:nowrap}
+.probe-letters{perspective:700px}
+.probe-letters button{transform-style:preserve-3d}
+
+/* ---- Launchpad: daily flight, streak, rank ---- */
+.daily-button{flex-basis:100%;display:flex;align-items:center;gap:12px;padding:11px 16px;border-radius:14px;text-align:left;background:linear-gradient(120deg,#fff3cf,#ffe6c4);border:1px solid #ecd3a0;color:#5d4520;font-weight:700;box-shadow:0 3px 0 #e4c993}
+.daily-button>span:first-child{font-size:24px;color:#d99a2b}
+.daily-button small{display:block;font-size:12px;font-weight:400;color:#7d6535}
+.daily-button b{font-variant-numeric:tabular-nums}
+.pilot-card{display:grid;grid-template-columns:1fr 1.25fr;gap:12px;margin:6px 0 24px;max-width:470px;perspective:900px}
+.pilot-card.loading-card{min-height:118px;border-radius:16px;background:#f4f1ec}
+.pilot-streak,.pilot-rank{display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:16px;background:#fff;border:1px solid var(--line);box-shadow:0 4px 0 #ebe4d8;transform-style:preserve-3d}
+.pilot-card small{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted)}
+.pilot-card em{font:12px/1.4 Arial,Helvetica,sans-serif;font-style:normal;color:var(--muted)}
+.pilot-streak{position:relative;padding-left:58px}
+.pilot-streak .flame{position:absolute;left:14px;top:14px;font-size:30px;line-height:1;filter:grayscale(1);opacity:.45;transform:translateZ(22px)}
+.pilot-streak.alive{background:linear-gradient(140deg,#fff6e0,#ffe9d6);border-color:#f0d3a8;box-shadow:0 4px 0 #ecc999}
+.pilot-streak.alive .flame{filter:none;opacity:1}
+.pilot-streak strong{font-size:30px;line-height:1;color:var(--ink)}
+.pilot-rank strong{font-size:20px;line-height:1.2;color:var(--ink);transform:translateZ(14px)}
+.rank-bar{display:block;height:7px;margin:6px 0 3px;border-radius:7px;background:#ece7de;overflow:hidden}
+.rank-bar i{display:block;height:100%;border-radius:7px;background:linear-gradient(90deg,#7fb7a7,#35616b)}
+.pilot-numbers{grid-column:1/-1;display:flex;gap:10px}
+.pilot-numbers span{flex:1;padding:9px 12px;border-radius:12px;background:#ffffffb8;border:1px solid var(--line);font-size:11px;color:var(--muted)}
+.pilot-numbers b{display:block;font-size:19px;color:var(--ink)}
+.welcome-facts{max-width:470px}
+.history-list li>span{min-width:0;overflow-wrap:anywhere}
+.history-list strong{text-align:right;white-space:nowrap}
+.history-list .stars{display:block;font-size:11px}
+
+/* ---- Scoring table and result ---- */
+.score-table{width:100%;margin:14px 0;border-collapse:collapse;font-size:12px;line-height:1.5}
+.score-table caption{text-align:left;font-weight:700;color:var(--ink);padding-bottom:6px}
+.score-table th{width:32%;padding:7px 10px 7px 0;text-align:left;vertical-align:top;color:var(--ink);font-weight:700;border-top:1px solid var(--line)}
+.score-table td{padding:7px 0;color:var(--muted);border-top:1px solid var(--line)}
+.stars{display:inline-flex;gap:2px;letter-spacing:0}
+.stars i{font-style:normal;color:#d9d5cc}
+.stars i.lit{color:#f0b23e;text-shadow:0 1px 0 #c98a1e}
+.rating{display:flex;align-items:center;gap:12px;margin:18px 0 4px}
+.rating .stars{font-size:27px}
+.rating strong{font-size:15px;color:var(--ink)}
+.result{perspective:1000px}
+.result.won{background:linear-gradient(170deg,#fffdf4,#fff 38%)}
+.result-medal{perspective:420px}
+.result-medal span{display:grid;place-items:center;width:100%;height:100%;border-radius:50%}
+.result.won .result-medal{background:radial-gradient(circle at 32% 28%,#fff4c9,#ffd676);color:#a8741c;box-shadow:0 4px 0 #dcae52,0 0 0 6px #ffeab52e}
+.score-breakdown>.score-row,.score-group{border-bottom:1px solid var(--line)}
+.score-row{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:12px 0}
+.score-row small{display:block}
+.score-row strong{font-size:22px;font-variant-numeric:tabular-nums}
+.score-breakdown>.score-group{display:block;padding:12px 0 4px}
+.score-group-title{font-size:10px;font-weight:750;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.score-row.sub{padding:7px 0 7px 14px;border-left:3px solid #f0e3bf;margin:4px 0}
+.score-row.sub span{font-size:14px}
+.score-row.sub strong{font-size:17px}
+.score-row.total strong{display:flex;align-items:baseline;font-size:46px;color:var(--purple)}
+.score-row.total strong b{font-weight:inherit}
+.score-row.total strong small{display:inline;font-size:12px;margin-left:6px}
+.flight-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:9px;margin:20px 0;perspective:700px}
+.flight-facts span{padding:10px 12px;border-radius:12px;background:#f7f5f0;border:1px solid var(--line);font-size:11px;color:var(--muted);backface-visibility:hidden}
+.flight-facts b{display:block;font-size:18px;color:var(--ink);font-variant-numeric:tabular-nums}
+.result-streak{display:flex;align-items:center;gap:12px;margin:0 0 22px;padding:12px 16px;border-radius:14px;background:#f7f5f0;border:1px solid var(--line)}
+.result-streak>span{font-size:26px;filter:grayscale(1);opacity:.5}
+.result-streak.alive{background:linear-gradient(140deg,#fff6e0,#ffe9d6);border-color:#f0d3a8}
+.result-streak.alive>span{filter:none;opacity:1}
+.result-streak p{margin:0;font-size:13px;color:var(--ink)}
+
+/* ---- Small screens ---- */
+@media(max-width:1050px){.quick-meter{min-width:0;flex:1 1 100%}}
+@media(max-width:560px){
+ .tile-front,.tile-back{border-radius:7px}
+ .hint-card{margin:-8px 0 20px;padding:11px 13px}
+ .hint-card p{font-size:13px}
+ .puzzle-top{flex-wrap:wrap}
+ .pilot-card{grid-template-columns:1fr;max-width:none}
+ .pilot-numbers span{padding:8px 9px}
+ .score-row.total strong{font-size:40px}
+ .rating .stars{font-size:23px}
+ .score-table th{width:36%}
+ .daily-button{padding:10px 13px}
+}
+@media(max-width:360px){.hint-button{padding:6px 11px;font-size:12px}.quick-meter small{font-size:10px}}
