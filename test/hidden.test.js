@@ -129,6 +129,9 @@ test('forgiving matching: accents, aliases, a leading "The", plurals, one unambi
  assert.equal(matchAnswer(promptById('nba_player'),'lebron').word,'LeBron James');assert.equal(matchAnswer(promptById('nba_player'),'Nowitzki').word,'Dirk Nowitzki');
  assert.equal(matchAnswer(promptById('bollywood_movie'),'ddlj').word,'Dilwale Dulhania Le Jayenge');assert.equal(matchAnswer(promptById('bollywood_movie'),'three idiots').word,'3 Idiots');
  const ambiguous=newRun(classic(),'practice',now);ambiguous.puzzle.rounds[0][0]={id:'test',title:'Test',answers:[{key:'STONE',word:'Stone',points:5},{key:'STOVE',word:'Stove',points:5}]};assert.throws(()=>answer(ambiguous,'test','STOLE'),/dictionary/);
+ // An equally close typo resolves to the single most common entry; a tie within the same tier stays rejected.
+ const tiered={answers:[{key:'KOALA',word:'Koala',points:5,aliases:[]},{key:'SAOLA',word:'Saola',points:40,aliases:[]}]};
+ assert.equal(matchAnswer(tiered,'kaola').word,'Koala');assert.throws(()=>matchAnswer(tiered,'kaola',{confirmTypos:true}),{code:'ANSWER_CONFIRMATION_REQUIRED',suggestion:{word:'Koala'}});
  const short=newRun(classic(),'practice',now);assert.throws(()=>answer(short,'fruit','Fag'),/dictionary/);assert.throws(()=>answer(short,'fruit','12345'),/dictionary/);assert.throws(()=>answer(short,'fruit','?!'),/letters or digits/);
  // Digit-only titles are real answers; with no letters to launch they bank as an echo.
  assert.equal(matchAnswer(promptById('book'),'1984').word,'Nineteen Eighty-Four');

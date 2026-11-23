@@ -34,7 +34,7 @@ All scoring lives in `public/updraft-rules.js`, imported by the server engine (a
 - An unused round (60) is worth more than the best possible extra round (40 + 10 + 5), so solving early is always right.
 - The result itemises every component, shows a 0–5 star rating (solved: 2 stars, +1 each at 300, 400 and 500; unsolved with 50+ points: 1 star) and play time, letter accuracy and hints used.
 
-Normalization ignores case, accents, spaces and punctuation; “&” and a free-standing “+” read as “and”; a “+” or “#” attached to a word is spoken, so C++, C# and Disney+ equal “C plus plus”, “C sharp” and “Disney plus”. Digits are kept (“3 Idiots”), and digit-only titles such as 1917, 300, 2.0 or 96 are valid answers (they bank points as an echo, since they have no letters to launch). An alias may be a single letter, matched exactly (“C”, “R”, “X”). Trivia answers accept listed entries and aliases, an optional leading “The”, simple plurals/singulars, and one typo for answers of five or more letters when exactly one entry fits. On people prompts, a surname alone is accepted when exactly one listed person has it. Full solves ignore a leading “the”, accept listed alternatives, and allow a single typo for targets of at least eight letters. Revealing every letter never solves automatically.
+Normalization ignores case, accents, spaces and punctuation; “&” and a free-standing “+” read as “and”; a “+” or “#” attached to a word is spoken, so C++, C# and Disney+ equal “C plus plus”, “C sharp” and “Disney plus”. Digits are kept (“3 Idiots”), and digit-only titles such as 1917, 300, 2.0 or 96 are valid answers (they bank points as an echo, since they have no letters to launch). An alias may be a single letter, matched exactly (“C”, “R”, “X”). Trivia answers accept listed entries and aliases, an optional leading “The”, simple plurals/singulars, and one typo for answers of five or more letters when exactly one entry fits. If several entries fit equally well, the single entry in the most common tier is suggested (“kaola” suggests Koala, not the deep-cut Saola); a tie within that tier is rejected. The player always confirms a suggestion before it banks. On people prompts, a surname alone is accepted when exactly one listed person has it. Full solves ignore a leading “the”, accept listed alternatives, and allow a single typo for targets of at least eight letters. Revealing every letter never solves automatically.
 
 Worked example (Machu Picchu, every answer within ten seconds): Papaya/P, Chile/E, Hornbill/H, Cucumber/C bank their rarity points, +40 quick, +15 for three hits; E misses (5 Fuel). Solving after 42 s of play earns 100 + 100 + 60 + 60 swift + 25 first-guess = 345. The engine test asserts every figure.
 
@@ -60,7 +60,7 @@ The last 20 result summaries are displayed; storage retains 100 summaries and fu
 
 The library is server-only and has two parts.
 
-**Answer bank: `lib/updraft-bank/`, 113 prompts and 53,930 accepted answers** (plus aliases). There is one file per prompt. Each lists answers in four rarity tiers, with aliases for spellings, nicknames, abbreviations and Indian-language names. `AUTHORING.md` in that folder holds the rules. `npm run lint:bank` reports duplicates, bad lengths and broken aliases. `npm run build:bank` regenerates `index.js` after adding a file; `npm run build` runs it too.
+**Answer bank: `lib/updraft-bank/`, 178 prompts and 116,263 accepted answers** (plus about 62,600 aliases; expanded 23 November 2026, see below). There is one file per prompt. Each lists answers in four rarity tiers, with aliases for spellings, nicknames, abbreviations and Indian-language names. `AUTHORING.md` in that folder holds the rules. `npm run lint:bank` reports duplicates, bad lengths and broken aliases. `npm run build:bank` regenerates `index.js` after adding a file; `npm run build` runs it too.
 
 Each flight is dealt five everyday/specialist pairs, ten distinct prompts. Every letter of the hidden answer must be reachable from at least two of the ten without relying on a deep cut. The deal uses a CSPRNG. A saved flight stores only prompt references (about 2 KB), not answer lists; answers are looked up when a move arrives.
 
@@ -154,3 +154,34 @@ These are measured samples from this connection, not latency guarantees. Server-
 - Updraft browser tests: **26/26** pass against the full library (five-round games at 320–1440 px, hint purchase and confirm, quick-bonus meter, keyboard launch, itemised result that sums to the server score, streak and next flight, plus all cinematic tests).
 - `npm run build`: the answer bank ships only inside the server function; no public file contains any answer.
 - Content review: a pattern scan for padding (fake “Jr”, name-plus-extra-word, doubled words) found only legitimate entries, and random samples of rare/deep-cut entries in the specialist files were all real. This is a sample, not a full review; the deep tiers of cricketer, footballer, tennis_player, f1_driver, olympian, fighter, bollywood_song and the very recent (2025) titles are most worth a human skim.
+
+## Expansion: more prompts and accepted answers (23 November 2026)
+
+**Library.** 178 prompts (79 everyday, 99 specialist) with 116,263 accepted answers, up from 113 prompts and 53,930. All 113 existing prompts accept more answers and aliases. 65 prompts are new:
+
+- **Everyday (28):** exercise or yoga pose, children's TV show, superpower, fairy tale or nursery rhyme, landform, pizza topping, ice cream flavour, breakfast food, soup, sauce or condiment, cooking technique, baby animal word, sound word, plant, maths term, computer term, stationery, jewellery, hairstyle, beauty product, container, sports equipment, car or bike part, building, room, shop, TV channel and Indian brand.
+- **Specialist (37):** cricket term, stadium, Indian sports star outside cricket, golfer, NFL player, baseball player, chess, South Indian film star, Indian TV show, TV character, movie character, Middle-earth character, Game of Thrones character, video game character, detective or spy, villain, English song, K-pop, comedian, painter, painting or sculpture, museum, philosopher, font, monarch, explorer, empire or dynasty, battle, national park, university, newspaper or magazine, business leader, cat breed, horse breed, collective noun, chemical compound and phobia.
+
+**Method and safeguards.**
+- Every existing file was edited **append-only**. A snapshot of every previously accepted key (answer, explicit alias and automatic surname shortcut) was compared after authoring: nothing that was accepted before is rejected now, and no existing answer changed tier.
+- One change was made on purpose: in `indian_leader`, “Shah”, “Basu” and “Didi” now resolve to Amit Shah, Jyoti Basu and Mamata Banerjee. Before, they resolved to less famous people.
+- Where a new person shared a surname with a listed person, the author added an explicit alias, so the old surname shortcut still works.
+- A scan of the new entries for padding found no invented entries. It looked for fake “Jr.”/“Sr.” names, doubled words, a listed name with extra words, near-duplicate spellings and leftover placeholder text. The authors reported catching and deleting some invented “Jr.” names in their drafts.
+
+**Left out on purpose:**
+- People convicted of, or facing, serious abuse allegations.
+- Prejudice words in the phobia list, and explicit titles.
+- Releases from 2026 whose release could not be confirmed.
+- Titles over 30 letters. A short form is used where one exists.
+
+**Review status.** Like the first bank, this was written by AI authoring passes. It has passed the linter and the checks above, but has **not** been reviewed by people. Specific concerns:
+- **Deep tiers:** the expansion added mostly specialist items, so many files now lean towards rare and deep. These are the most likely place for errors: city, Indian city, water, dinosaur, small-nation cricketers and recent titles.
+- **Very recent titles:** they rely on the author's knowledge of release dates.
+
+**Typo matching.** Bigger lists put more one-letter typos equally close to two entries. The tier tie-break above keeps common answers like Koala reachable.
+
+**Verification.**
+- `npm run lint:bank`: 178 categories, 0 problems.
+- `validateLibrary()`: 0 errors.
+- `npm test`: all pass, including a new tie-break assertion.
+- A non-exact lookup in the largest prompt (city, 3,434 answers) takes about 12 ms.
